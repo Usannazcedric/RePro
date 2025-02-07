@@ -69,11 +69,14 @@
       "type": "text",
       "required": false
     },
-    "nom": {
+    "Nom": {
       "type": "string"
     },
-    "prenom": {
+    "Prenom": {
       "type": "string"
+    },
+    "Birth": {
+      "type": "date"
     }
   }
 }

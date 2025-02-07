@@ -36,9 +36,16 @@
           <input type="text" id="biographie" v-model="biographie" required>
         </div>
         <div>
+          <label for="birth">Date de naissance:</label>
+          <input type="date" id="birth" v-model="birth" required>
+        </div>
+        <div>
           <button type="submit">Mettre à jour les informations</button>
         </div>
       </form>
+      <div v-if="isRegistered">
+        <button @click="redirectToProfile">Suivant</button>
+      </div>
       <div>
         <button @click="redirectToLogin">Se connecter</button>
       </div>
@@ -56,6 +63,7 @@
         prenom: '',
         nom: '',
         biographie: '',
+        birth: '',
         isRegistered: false,
         userId: null
       };
@@ -80,7 +88,8 @@
           });
           if (response.ok) {
             const data = await response.json();
-            this.userId = data.user.id; 
+            this.userId = data.user.id;
+            localStorage.setItem('token', data.jwt); 
             this.isRegistered = true;
           } else {
             const errorData = await response.json();
@@ -95,21 +104,28 @@
           const response = await fetch(`http://localhost:1337/api/users/${this.userId}`, {
             method: 'PUT',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}` 
             },
             body: JSON.stringify({
-              prenom: this.prenom,
-              nom: this.nom,
-              Biographie: this.biographie
+              Prenom: this.prenom,
+              Nom: this.nom,
+              Biographie: this.biographie,
+              Birth: this.birth
             })
           });
-          if (!response.ok) {
+          if (response.ok) {
+            this.isProfileUpdated = true;
+          } else {
             const errorData = await response.json();
             console.error(`Erreur lors de la mise à jour des informations: ${errorData.message}`);
           }
         } catch (error) {
           console.error('Erreur:', error);
         }
+      },
+      redirectToProfile() {
+        window.location.href = '/profile';
       },
       redirectToLogin() {
         window.location.href = '/login';

@@ -1,14 +1,14 @@
 <template>
     <div>
       <h1>Login</h1>
-      <form action="/login" method="POST">
+      <form @submit.prevent="login">
         <div>
           <label for="username">Nom d'utilisateur:</label>
-          <input type="text" id="username" name="username" required>
+          <input type="text" id="username" v-model="username" required>
         </div>
         <div>
           <label for="password">Mot de passe:</label>
-          <input type="password" id="password" name="password" required>
+          <input type="password" id="password" v-model="password" required>
         </div>
         <div>
           <button type="submit">Se connecter</button>
@@ -22,7 +22,37 @@
   
   <script>
   export default {
+    data() {
+      return {
+        username: '',
+        password: ''
+      };
+    },
     methods: {
+      async login() {
+        try {
+          const response = await fetch('http://localhost:1337/api/auth/local', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              identifier: this.username,
+              password: this.password
+            })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.jwt); 
+            window.location.href = '/profile'; 
+          } else {
+            const errorData = await response.json();
+            console.error(`Erreur lors de la connexion: ${errorData.message}`);
+          }
+        } catch (error) {
+          console.error('Erreur:', error);
+        }
+      },
       redirectToRegister() {
         window.location.href = '/register';
       }
