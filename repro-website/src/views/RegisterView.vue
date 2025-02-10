@@ -40,29 +40,30 @@
             </div>
             <button type="submit" class="submit-button">Suivant</button>
           </form>
-          <form @submit.prevent="updateUserDetails" v-else>
-            <div class="input-container">
-              <label for="prenom">Prénom</label>
-              <input type="text" id="prenom" v-model="prenom" required>
-            </div>
-            <div class="input-container">
-              <label for="nom">Nom</label>
-              <input type="text" id="nom" v-model="nom" required>
-            </div>
-            <div class="input-container">
-              <label for="biographie">Biographie</label>
-              <input type="text" id="biographie" v-model="biographie" required>
+          
+          <form @submit.prevent="updateAndRedirect" v-else>
+            <div class="name-container">
+              <div class="input-container">
+                <label for="prenom">Prénom</label>
+                <input type="text" id="prenom" v-model="prenom" required>
+              </div>
+              <div class="input-container">
+                <label for="nom">Nom</label>
+                <input type="text" id="nom" v-model="nom" required>
+              </div>
             </div>
             <div class="input-container">
               <label for="birth">Date de naissance</label>
               <input type="date" id="birth" v-model="birth" required>
             </div>
-            <button type="submit" class="submit-button">Mettre à jour les informations</button>
+            <div class="input-container">
+              <label for="biographie">Biographie</label>
+              <input type="text" id="biographie" v-model="biographie" required>
+            </div>
+            <button type="submit" class="submit-button">Créer votre compte</button>
           </form>
-          <div v-if="isRegistered">
-            <button @click="redirectToProfile" class="submit-button">Suivant</button>
-          </div>
-          <div class="login-link">
+          
+          <div v-if="!isRegistered" class="login-link">
             <span>Déjà membre ? <a @click="redirectToLogin">Connectez-vous</a></span>
           </div>
         </div>
@@ -117,7 +118,7 @@
           console.error('Erreur:', error);
         }
       },
-      async updateUserDetails() {
+      async updateAndRedirect() {
         try {
           const response = await fetch(`http://localhost:1337/api/users/${this.userId}`, {
             method: 'PUT',
@@ -133,7 +134,7 @@
             })
           });
           if (response.ok) {
-            this.isProfileUpdated = true;
+            window.location.href = '/profile';
           } else {
             const errorData = await response.json();
             console.error(`Erreur lors de la mise à jour des informations: ${errorData.message}`);
@@ -142,15 +143,13 @@
           console.error('Erreur:', error);
         }
       },
-      redirectToProfile() {
-        window.location.href = '/profile';
-      },
       redirectToLogin() {
         window.location.href = '/login';
       }
     }
   }
   </script>
+  
   
   <style scoped>
   .free-trial {
@@ -193,6 +192,15 @@
     padding: 128px;
   }
   
+  .name-container {
+  display: flex;
+  gap: 10px;
+}
+
+.name-container .input-container {
+  flex: 1; /* Pour que chaque champ prenne la moitié de l'espace */
+}
+
   .background-image {
     position: absolute;
     bottom: 0;
