@@ -36,7 +36,7 @@ import { RouterLink, RouterView } from 'vue-router'
 
 nav {
   display: flex;
-  gap: 20px;
+  gap: 30px;
 }
 
 nav a {
