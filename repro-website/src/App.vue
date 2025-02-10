@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { ref } from 'vue';
+import { RouterLink, RouterView } from 'vue-router';
+
+const isMenuOpen = ref(false);
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
 </script>
 
 <template>
@@ -8,12 +14,17 @@ import { RouterLink, RouterView } from 'vue-router'
       <div class="logo">
         <img src="/Logo.svg" alt="Logo" />
       </div>
-      <nav>
-        <RouterLink to="/">Accueil</RouterLink>
-        <RouterLink to="/community">Communauté</RouterLink>
-        <RouterLink to="/courses">Mes formations</RouterLink>
-        <RouterLink to="/faq">FAQ</RouterLink>
-        <RouterLink to="/profile">Mon compte</RouterLink>
+      <button class="burger" @click="toggleMenu">
+        <span :class="{ 'open': isMenuOpen }"></span>
+        <span :class="{ 'open': isMenuOpen }"></span>
+        <span :class="{ 'open': isMenuOpen }"></span>
+      </button>
+      <nav :class="{ 'active': isMenuOpen }">
+        <RouterLink to="/" @click="toggleMenu">Accueil</RouterLink>
+        <RouterLink to="/community" @click="toggleMenu">Communauté</RouterLink>
+        <RouterLink to="/courses" @click="toggleMenu">Mes formations</RouterLink>
+        <RouterLink to="/faq" @click="toggleMenu">FAQ</RouterLink>
+        <RouterLink to="/profile" @click="toggleMenu">Mon compte</RouterLink>
       </nav>
     </div>
   </header>
@@ -26,8 +37,10 @@ import { RouterLink, RouterView } from 'vue-router'
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5.8vh 8.92vw; 
+  padding: 5.8vh 8.92vw;
   background-color: #262734;
+  position: relative;
+  z-index: 10;
 }
 
 .logo img {
@@ -55,13 +68,61 @@ nav a::after {
   right: 0;
   background: #007BFF;
   transition: width 0.3s ease;
-  -webkit-transition: width 0.3s ease;
 }
 
 nav a:hover::after {
   width: 100%;
   left: 0;
   background: #007BFF;
+}
+
+.burger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.burger span {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background: white;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .burger {
+    display: flex;
+  }
+
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(38, 39, 52, 0.95);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    display: none;
+    text-align: center;
+    z-index: 15;
+  }
+
+  nav.active {
+    display: flex;
+  }
+
+  nav a {
+    padding: 15px;
+    font-size: 20px;
+    color: white;
+  }
 }
 </style>
 

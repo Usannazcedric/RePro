@@ -1,68 +1,85 @@
 <template>
-    <img src="../../public/background-register.svg" alt="Background" class="background-image" />
+    <img
+      src="../../public/background-register.svg"
+      alt="Background"
+      class="background-image"
+    />
     <div class="register-wrapper">
       <div class="register-container">
         <div class="left-section">
           <p class="free-trial">Essayez gratuitement</p>
           <div class="title-left">
             <h1>
-              Publiez vos formations,<br>
-              <span class="blue-exclamation">propulsez-les</span> vers le <br>
+              Publiez vos formations,<br />
+              <span class="blue-exclamation">propulsez-les</span> vers le <br />
               succès
             </h1>
           </div>
-          <h2 class="little-text">Lancez vos formations sur la plateforme qui optimise vos <br> cours avec l’IA pour les rendre plus ludiques et interactifs !</h2>
+          <h2 class="little-text">
+            Lancez vos formations sur la plateforme qui optimise vos <br />
+            cours avec l’IA pour les rendre plus ludiques et interactifs !
+          </h2>
           <div class="buttons">
             <button class="outlined">En savoir plus</button>
             <button class="filled">Nos abonnements</button>
           </div>
         </div>
         <div class="right-section">
-          <h1>Créez votre compte <br> dès maintenant <span class="blue-exclamation">!</span></h1>
+          <h1>
+            Créez votre compte <br />
+            dès maintenant <span class="blue-exclamation">!</span>
+          </h1>
           <form @submit.prevent="register" v-if="!isRegistered">
             <div class="input-container">
               <label for="username">Nom d'utilisateur</label>
-              <input type="text" id="username" v-model="username" required>
+              <input type="text" id="username" v-model="username" required />
             </div>
             <div class="input-container">
               <label for="email">Email</label>
-              <input type="email" id="email" v-model="email" required>
+              <input type="email" id="email" v-model="email" required />
             </div>
             <div class="password-container">
               <div class="input-container">
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" v-model="password" required>
+                <input type="password" id="password" v-model="password" required />
               </div>
               <div class="input-container">
                 <label for="confirmPassword">Confirmer le mot de passe</label>
-                <input type="password" id="confirmPassword" v-model="confirmPassword" required>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  v-model="confirmPassword"
+                  required
+                />
               </div>
             </div>
             <button type="submit" class="submit-button">Suivant</button>
           </form>
-          
+  
           <form @submit.prevent="updateAndRedirect" v-else>
             <div class="name-container">
               <div class="input-container">
                 <label for="prenom">Prénom</label>
-                <input type="text" id="prenom" v-model="prenom" required>
+                <input type="text" id="prenom" v-model="prenom" required />
               </div>
               <div class="input-container">
                 <label for="nom">Nom</label>
-                <input type="text" id="nom" v-model="nom" required>
+                <input type="text" id="nom" v-model="nom" required />
               </div>
             </div>
             <div class="input-container">
               <label for="birth">Date de naissance</label>
-              <input type="date" id="birth" v-model="birth" required>
+              <input type="date" id="birth" v-model="birth" required />
             </div>
             <div class="input-container">
               <label for="biographie">Biographie</label>
-              <input type="text" id="biographie" v-model="biographie" required>
+              <input type="text" id="biographie" v-model="biographie" required />
             </div>
-            <button type="submit" class="submit-button">Créer votre compte</button>
+            <button type="submit" class="submit-button">
+              Créer votre compte
+            </button>
           </form>
-          
+  
           <div v-if="!isRegistered" class="login-link">
             <span>Déjà membre ? <a @click="redirectToLogin">Connectez-vous</a></span>
           </div>
@@ -75,86 +92,93 @@
   export default {
     data() {
       return {
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        prenom: '',
-        nom: '',
-        biographie: '',
-        birth: '',
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        prenom: "",
+        nom: "",
+        biographie: "",
+        birth: "",
         isRegistered: false,
-        userId: null
+        userId: null,
       };
     },
     methods: {
       async register() {
         if (this.password !== this.confirmPassword) {
-          console.error('Les mots de passe ne correspondent pas.');
+          console.error("Les mots de passe ne correspondent pas.");
           return;
         }
         try {
-          const response = await fetch('http://localhost:1337/api/auth/local/register', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              username: this.username,
-              email: this.email,
-              password: this.password
-            })
-          });
+          const response = await fetch(
+            "http://localhost:1337/api/auth/local/register",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                username: this.username,
+                email: this.email,
+                password: this.password,
+              }),
+            }
+          );
           if (response.ok) {
             const data = await response.json();
             this.userId = data.user.id;
-            localStorage.setItem('token', data.jwt);
+            localStorage.setItem("token", data.jwt);
             this.isRegistered = true;
           } else {
             const errorData = await response.json();
             console.error(`Erreur lors de l'inscription: ${errorData.message}`);
           }
         } catch (error) {
-          console.error('Erreur:', error);
+          console.error("Erreur:", error);
         }
       },
       async updateAndRedirect() {
         try {
-          const response = await fetch(`http://localhost:1337/api/users/${this.userId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              Prenom: this.prenom,
-              Nom: this.nom,
-              Biographie: this.biographie,
-              Birth: this.birth
-            })
-          });
+          const response = await fetch(
+            `http://localhost:1337/api/users/${this.userId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                Prenom: this.prenom,
+                Nom: this.nom,
+                Biographie: this.biographie,
+                Birth: this.birth,
+              }),
+            }
+          );
           if (response.ok) {
-            window.location.href = '/profile';
+            window.location.href = "/profile";
           } else {
             const errorData = await response.json();
-            console.error(`Erreur lors de la mise à jour des informations: ${errorData.message}`);
+            console.error(
+              `Erreur lors de la mise à jour des informations: ${errorData.message}`
+            );
           }
         } catch (error) {
-          console.error('Erreur:', error);
+          console.error("Erreur:", error);
         }
       },
       redirectToLogin() {
-        window.location.href = '/login';
-      }
-    }
-  }
+        window.location.href = "/login";
+      },
+    },
+  };
   </script>
-  
   
   <style scoped>
   .free-trial {
     font-size: 1.3em;
-    margin-bottom: 20px; 
+    margin-bottom: 20px;
   }
   
   .little-text {
@@ -165,7 +189,7 @@
   
   .title-left h1 {
     font-size: 35px;
-    line-height: 1.3; 
+    line-height: 1.3;
     margin-top: 10px;
   }
   
@@ -193,14 +217,14 @@
   }
   
   .name-container {
-  display: flex;
-  gap: 10px;
-}
-
-.name-container .input-container {
-  flex: 1; /* Pour que chaque champ prenne la moitié de l'espace */
-}
-
+    display: flex;
+    gap: 10px;
+  }
+  
+  .name-container .input-container {
+    flex: 1; 
+  }
+  
   .background-image {
     position: absolute;
     bottom: 0;
@@ -215,11 +239,10 @@
     width: calc(50% - 8px);
     padding: 20px;
     display: flex;
-    flex-direction: column;  
-    justify-content: flex-start; 
+    flex-direction: column;
+    justify-content: flex-start;
   }
   
-
   .buttons {
     margin-top: 20px;
     display: flex;
@@ -242,15 +265,15 @@
   }
   
   .buttons .filled {
-    background-color: #0084FF;
+    background-color: #0084ff;
     color: white;
     border: none;
     font-size: 13px;
   }
   
   .buttons .filled:hover {
-    background-color: #007BFF;
-    box-shadow: 0 0 10px #007BFF;
+    background-color: #007bff;
+    box-shadow: 0 0 10px #007bff;
   }
   
   .buttons .outlined:hover {
@@ -267,7 +290,7 @@
   }
   
   .left-section p {
-      font-size: 20px;
+    font-size: 20px;
   }
   
   .input-container {
@@ -285,7 +308,7 @@
   }
   
   .input-container:focus-within {
-    border: 2px solid #0084FF;
+    border: 2px solid #0084ff;
     box-shadow: 0 0 8px rgba(0, 132, 255, 0.8);
   }
   
@@ -300,7 +323,7 @@
   }
   
   .blue-exclamation {
-    color: #0084FF;
+    color: #0084ff;
   }
   
   .input-container input {
@@ -321,7 +344,7 @@
   button.submit-button {
     width: 100%;
     height: 50px;
-    background-color: #0084FF;
+    background-color: #0084ff;
     color: white;
     border: none;
     border-radius: 40px;
@@ -333,8 +356,8 @@
   }
   
   button.submit-button:hover {
-    background-color: #007BFF;
-    box-shadow: 0 0 10px #007BFF;
+    background-color: #007bff;
+    box-shadow: 0 0 10px #007bff;
   }
   
   .login-link {
@@ -343,7 +366,7 @@
   }
   
   .login-link a {
-    color: #0084FF;
+    color: #0084ff;
     cursor: pointer;
     text-decoration: none;
   }
@@ -351,5 +374,63 @@
   .login-link a:hover {
     text-decoration: underline;
   }
+  
+  @media (max-width: 768px) {
+  .register-container {
+    flex-direction: column; 
+    padding: 20px;
+    height: auto;
+    border-radius: 20px;
+  }
+
+  .left-section {
+    display: none;
+  }
+
+  .left-section,
+  .right-section {
+    width: 100%;
+    padding: 10px;
+    margin-left: 0;
+  }
+
+  .title-left h1 {
+    font-size: 24px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .little-text {
+    font-size: 0.6em;
+  }
+
+  .buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .password-container {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .name-container {
+    flex-direction: column;
+  }
+
+  .background-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .login-link {
+    text-align: center; 
+    margin-top: 20px;
+  }
+}
+
   </style>
   
