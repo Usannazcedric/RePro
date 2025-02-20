@@ -1,10 +1,9 @@
 <template>
   <div class="profile-page">
-    <!-- Sidebar -->
     <div class="sidebar">
       <div class="static-section">
-        <h2>{{ username }}</h2>
         <div class="profile-picture"></div>
+        <h2>{{ username }}</h2>
         <div class="progress-bar">
           <div class="progress" :style="{ width: progress + '%' }"></div>
         </div>
@@ -18,11 +17,10 @@
         <RouterLink to="/profile/verification">Vérification en cours</RouterLink>
         <RouterLink to="/profile/settings">Paramètres</RouterLink>
         <RouterLink to="/profile/transactions">Transactions</RouterLink>
-        <button @click="logout">Se déconnecter</button>
+        <a href="#" @click.prevent="logout" class="logout-link">Se déconnecter</a>
       </nav>
     </div>
     
-    <!-- Content Area -->
     <div class="content">
       <RouterView />
     </div>
@@ -85,15 +83,19 @@ export default {
 <style>
 .profile-page {
   display: flex;
-  height: 100vh;
+  max-height: calc(100vh - 40px);
+  padding: 20px;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 .sidebar {
   width: 300px;
-  background-color: #f8f9fa;
+  background-color: #20212B;
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  border-radius: 10px;
 }
 .static-section {
   text-align: center;
@@ -122,19 +124,20 @@ export default {
   display: flex;
   flex-direction: column;
 }
-.navigation a, .navigation button {
+.navigation a, .logout-link {
   text-decoration: none;
-  color: black;
+  color: #AEB2C2;
   padding: 10px;
   border-radius: 5px;
   transition: 0.3s;
-}
-.navigation a:hover, .navigation button:hover {
-  background-color: #007BFF;
-  color: white;
+  cursor: pointer;
 }
 .content {
   flex: 1;
   padding: 20px;
+  background-color: #20212B;
+  border-radius: 10px;
 }
+
+
 </style>
