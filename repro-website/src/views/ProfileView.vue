@@ -1,7 +1,7 @@
 <template>
   <div class="profile-page">
     <div class="sidebar">
-      <div class="static-section">
+      <div class="static-section centered-content">
         <div class="profile-picture"></div>
         <h2>{{ username }}</h2>
         <div class="progress-bar">
@@ -35,7 +35,7 @@ export default {
       email: '',
       prenom: '',
       nom: '',
-      progress: 50 // Exemple de progression
+      progress: 50 
     };
   },
   created() {
@@ -81,6 +81,17 @@ export default {
 </script>
 
 <style>
+
+.centered-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h2 {
+  font-size: 0.9em; /* Ajustez cette valeur selon vos besoins */
+}
+
 .profile-page {
   display: flex;
   max-height: calc(100vh - 40px);
@@ -108,6 +119,8 @@ export default {
   background-color: #ccc;
   border-radius: 20px;
   margin: 10px 0;
+  background-color: #0084FF;
+
   
 }
 .progress-bar {
