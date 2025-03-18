@@ -95,18 +95,20 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 10px;
+  border-radius: 40px;
 }
 .static-section {
+  justify-content: center;
   text-align: center;
   margin-bottom: 20px;
 }
 .profile-picture {
-  width: 100px;
-  height: 100px;
+  width: 73px;
+  height: 73px;
   background-color: #ccc;
-  border-radius: 50%;
+  border-radius: 20px;
   margin: 10px 0;
+  
 }
 .progress-bar {
   width: 100%;
@@ -136,7 +138,7 @@ export default {
   flex: 1;
   padding: 20px;
   background-color: #20212B;
-  border-radius: 10px;
+  border-radius: 40px;
 }
 
 
