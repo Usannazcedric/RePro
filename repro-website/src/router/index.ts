@@ -29,6 +29,11 @@ const router = createRouter({
       component: () => import('../views/RegisterView.vue'),
     },
     {
+      path: '/formations',
+      name: 'formations',
+      component: () => import('../views/FormationsView.vue'),
+    },
+    {
       path: '/profile',
       component: ProfileView,
       children: [

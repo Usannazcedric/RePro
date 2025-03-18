@@ -22,7 +22,7 @@ const toggleMenu = () => {
       <nav :class="{ 'active': isMenuOpen }">
         <RouterLink to="/" @click="toggleMenu">Accueil</RouterLink>
         <RouterLink to="/community" @click="toggleMenu">Communauté</RouterLink>
-        <RouterLink to="/courses" @click="toggleMenu">Mes formations</RouterLink>
+        <RouterLink to="/formations" @click="toggleMenu">Mes formations</RouterLink>
         <RouterLink to="/faq" @click="toggleMenu">FAQ</RouterLink>
         <RouterLink to="/profile" @click="toggleMenu">Mon compte</RouterLink>
       </nav>
