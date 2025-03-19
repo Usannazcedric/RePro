@@ -53,20 +53,25 @@ function handleFileChange(event) {
   }
 }
 
-// Simule l'appel à une IA (à remplacer par un vrai backend plus tard)
 async function sendToAI(file) {
   const formData = new FormData()
   formData.append('ebook', file)
 
-  // Appel API vers backend qui utilise une IA genre GPT pour créer du contenu
-  const response = await fetch('/api/analyze-ebook', {
-    method: 'POST',
-    body: formData
-  })
+  try {
+    const response = await fetch('http://localhost:3000/api/analyze-ebook', {
+  method: 'POST',
+  body: formData
+})
 
-  const data = await response.json()
-  aiContent.value = data.generatedContent 
+
+    const data = await response.json()
+    aiContent.value = data.generatedContent 
+    console.log('Résumé IA:', data.generatedContent) 
+  } catch (error) {
+    console.error('Erreur front:', error)
+  }
 }
+
 </script>
 
 <style scoped>
