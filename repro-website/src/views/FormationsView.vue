@@ -65,10 +65,11 @@ async function sendToAI(file) {
   })
 
   const data = await response.json()
-  aiContent.value = data.generatedContent // HTML ou markdown rendu
+  aiContent.value = data.generatedContent 
 }
 </script>
 
 <style scoped>
-/* Un peu de style pour rendre tout ça clean */
+
+
 </style>
