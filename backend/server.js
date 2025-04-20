@@ -2,13 +2,13 @@ const express = require('express');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
+const axios = require('axios');
 
 const app = express();
-const cors = require('cors');
-app.use(cors({ origin: 'http://localhost:5173' }));
-
 const port = 3000;
 const upload = multer({ dest: 'uploads/' });
+
+app.use(require('cors')());
 
 app.post('/api/analyze-ebook', upload.single('ebook'), async (req, res) => {
   const filePath = req.file.path;
@@ -16,13 +16,13 @@ app.post('/api/analyze-ebook', upload.single('ebook'), async (req, res) => {
   try {
     const dataBuffer = fs.readFileSync(filePath);
     const pdfData = await pdfParse(dataBuffer);
-    const text = pdfData.text;
+    const text = pdfData.text.slice(0, 8000); // tronque long PDF
 
-    // Générer un résumé simple
-    const resume = genererResumeSimple(text);
+    const prompt = buildPrompt(text);
+    const aiResponse = await callLMStudio(prompt);
 
     fs.unlinkSync(filePath);
-    res.json({ generatedContent: resume });
+    res.json({ generatedContent: aiResponse });
 
   } catch (err) {
     console.error(err);
@@ -32,16 +32,58 @@ app.post('/api/analyze-ebook', upload.single('ebook'), async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Backend en écoute sur http://localhost:${port}`);
+  console.log(`✅ Serveur backend en écoute sur http://localhost:${port}`);
 });
 
-// Fonction pour générer un résumé simple en une phrase
-function genererResumeSimple(text) {
-  // Recherche d'un sujet général à partir des premières lignes du texte
-  const lignes = text.split('\n').slice(0, 5); // Prendre les 5 premières lignes pour un résumé rapide
-  const resume = lignes.join(' '); // Fusionner les lignes et les simplifier
+function buildPrompt(text) {
+    return `
+  Tu es une IA éducative spécialisée dans la rédaction de contenus pédagogiques en français parfait (sans fautes de grammaire, conjugaison ou syntaxe).
+  
+  Voici un extrait de cours à résumer et transformer :
+  
+  """
+  ${text}
+  """
+  
+  Ta mission :
+  
+  1. ✏️ Rédige un résumé clair, fluide, bien structuré, en français impeccable, de 2 à 3 phrases.
+  2. 🧠 Crée 3 questions de quiz sous la forme :
+     - Q1 : [texte de la question]
+       A) ...
+       B) ...
+       C) ...
+       D) ...
+       Réponse correcte : ...
+     - Pas de balises HTML ni de formatage Markdown (pas de \`\`\`scss ni autre).
+  3. 💡 Donne une astuce ou un point clé à retenir à la fin, dans une phrase concise et bien rédigée.
+  
+  Ne numérote pas les grandes sections (Résumé, Quiz, Astuce), mais commence directement par le texte, dans cet ordre :
+  
+  Résumé  
+  Questions de quiz  
+  Astuce
+  
+  Respecte les retours à la ligne pour faciliter la lecture.
+  `;
+  }
+  
 
-  // Si la première ligne contient un résumé utile, l'utiliser
-  const resumeCourt = resume.replace(/\n/g, ' ').slice(0, 200); // Limiter à 200 caractères pour la clarté
-  return resumeCourt;
+async function callLMStudio(prompt) {
+  try {
+    const response = await axios.post('http://localhost:1234/v1/chat/completions', {
+      model: "local-model", // nom par défaut dans LM Studio
+      messages: [
+        { role: "system", content: "Tu es un assistant pédagogique." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    console.error('❌ Erreur appel LM Studio :', error);
+    return 'Erreur IA';
+  }
 }
