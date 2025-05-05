@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [username, setUsername] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUser = async () => {
+        try {
+          const storedUser = await AsyncStorage.getItem('user');
+          if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            setUsername(parsed.username);
+          } else {
+            setUsername(null);
+          }
+        } catch (err) {
+          console.error('Erreur lors du chargement de l’utilisateur', err);
+        }
+      };
+
+      fetchUser();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -12,7 +35,9 @@ export default function HomeScreen() {
         <View>
           <Text style={styles.subtitle}>Reprenons l’apprentissage,</Text>
           <Text style={styles.title}>
-            <Text style={{ fontWeight: 'bold', color: '#0B3C83' }}>Alex Park!</Text>
+            <Text style={{ fontWeight: 'bold', color: '#0B3C83' }}>
+              {username ? `${username} !` : '...'}
+            </Text>
           </Text>
         </View>
 

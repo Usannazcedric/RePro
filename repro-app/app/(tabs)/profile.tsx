@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   Platform,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,21 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<{ email: string; username: string } | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Simuler des données utilisateur
-  const user = {
-    firstName: 'Alex',
-    lastName: 'Park',
-    email: 'alex.park@example.com',
-  };
 
   useEffect(() => {
     const fetchToken = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
-        setToken(storedToken);
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedToken) setToken(storedToken);
+        if (storedUser) setUser(JSON.parse(storedUser));
       } catch (err) {
         console.error('Erreur lors de la lecture du token', err);
       } finally {
@@ -38,9 +35,41 @@ export default function ProfileScreen() {
     fetchToken();
   }, []);
 
-  const handleFakeLogin = async () => {
-    await AsyncStorage.setItem('token', 'fake_token');
-    setToken('fake_token');
+  const handleLogin = async () => {
+    try {
+      const res = await fetch('http://localhost:1337/api/auth-app-user/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Erreur ${res.status} : ${errorText}`);
+      }
+
+      const data = await res.json();
+      await AsyncStorage.setItem('token', data.jwt);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      setToken(data.jwt);
+      setUser(data.user);
+    } catch (err) {
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la connexion');
+      console.error(err);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+    } catch (err) {
+      console.error('Erreur lors de la déconnexion', err);
+    }
   };
 
   if (loading) {
@@ -51,7 +80,7 @@ export default function ProfileScreen() {
     );
   }
 
-  if (!token) {
+  if (!token || !user) {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Connexion</Text>
@@ -70,7 +99,7 @@ export default function ProfileScreen() {
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TouchableOpacity onPress={handleFakeLogin} style={styles.button}>
+        <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Se connecter</Text>
         </TouchableOpacity>
 
@@ -91,9 +120,13 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Bienvenue, {user.firstName} {user.lastName}</Text>
+      <Text style={styles.title}>Bienvenue, {user.username}</Text>
       <Text style={styles.label}>Email :</Text>
       <Text style={styles.text}>{user.email}</Text>
+
+      <TouchableOpacity onPress={handleLogout} style={[styles.button, styles.logoutButton]}>
+        <Text style={styles.buttonText}>Se déconnecter</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -152,5 +185,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
     color: '#666',
+  },
+  logoutButton: {
+    backgroundColor: 'red',
+    marginTop: 32,
   },
 });
