@@ -64,14 +64,14 @@ function buildPrompt(text) {
   Questions de quiz  
   Astuce
   
-  Respecte les retours à la ligne pour faciliter la lecture.
+  Respecte imperativement les retours à la ligne pour faciliter la lecture, d'abord, le résumé du cours, ensuite retour a ligne, les quiz, et enfin retour a ligne, l'astuce.
   `;
   }
   
 
 async function callLMStudio(prompt) {
   try {
-    const response = await axios.post('http://localhost:1234/v1/chat/completions', {
+    const response = await axios.post('http://127.0.0.1:1234/v1/chat/completions', {
       model: "local-model", // nom par défaut dans LM Studio
       messages: [
         { role: "system", content: "Tu es un assistant pédagogique." },

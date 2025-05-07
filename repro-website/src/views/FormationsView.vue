@@ -42,10 +42,13 @@
       </div>
   
       <!-- Résultat -->
-      <div v-if="aiContent && !loading" class="mt-6">
-        <h2 class="text-xl font-semibold mb-2">Contenu généré par l'IA</h2>
-        <div v-html="aiContent" class="bg-gray-100 p-4 rounded whitespace-pre-line"></div>
-      </div>
+<div v-if="aiContent && !loading" class="mt-6">
+  <h2 class="text-xl font-semibold mb-2">Contenu généré par l'IA</h2>
+  <div class="bg-gray-100 p-4 rounded whitespace-pre-line">
+    {{ aiContent }}
+  </div>
+</div>
+
     </div>
   </template>
   
