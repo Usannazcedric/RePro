@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { supabase } from '../supabase.ts'
 import HomeView from '../views/HomeView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import Notifications from '../components/Notifications.vue'
@@ -37,6 +38,7 @@ const router = createRouter({
       path: '/profile',
       component: ProfileView,
       children: [
+        { path: '', component: Profile },
         { path: 'notifications', component: Notifications },
         { path: 'profile', component: Profile },
         { path: 'statistics', component: Statistics },
@@ -51,17 +53,17 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      next({ name: 'login' });
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      next({ name: 'login' })
     } else {
-      next();
+      next()
     }
   } else {
-    next();
+    next()
   }
-});
+})
 
 export default router

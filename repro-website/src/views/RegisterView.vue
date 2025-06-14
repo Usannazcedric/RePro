@@ -17,7 +17,7 @@
           </div>
           <h2 class="little-text">
             Lancez vos formations sur la plateforme qui optimise vos <br />
-            cours avec l’IA pour les rendre plus ludiques et interactifs !
+            cours avec l'IA pour les rendre plus ludiques et interactifs !
           </h2>
           <div class="buttons">
             <button class="outlined">En savoir plus</button>
@@ -30,6 +30,9 @@
             dès maintenant <span class="blue-exclamation">!</span>
           </h1>
           <form @submit.prevent="register" v-if="!isRegistered">
+            <div v-if="errorMessage" class="error-message">
+              {{ errorMessage }}
+            </div>
             <div class="input-container">
               <label for="username">Nom d'utilisateur</label>
               <input type="text" id="username" v-model="username" required />
@@ -89,6 +92,8 @@
   </template>
   
   <script>
+  import { supabase } from '../supabase'
+
   export default {
     data() {
       return {
@@ -102,70 +107,81 @@
         birth: "",
         isRegistered: false,
         userId: null,
+        errorMessage: "",
       };
     },
     methods: {
+      validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      },
       async register() {
+        this.errorMessage = "";
+
         if (this.password !== this.confirmPassword) {
-          console.error("Les mots de passe ne correspondent pas.");
+          this.errorMessage = "Les mots de passe ne correspondent pas.";
           return;
         }
+
+        if (!this.validateEmail(this.email)) {
+          this.errorMessage = "L'adresse email n'est pas valide.";
+          return;
+        }
+
+        if (this.password.length < 6) {
+          this.errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+          return;
+        }
+
         try {
-          const response = await fetch(
-            "http://localhost:1337/api/auth/local/register",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
+          const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+            email: this.email,
+            password: this.password,
+            options: {
+              data: {
                 username: this.username,
-                email: this.email,
-                password: this.password,
-              }),
+              }
             }
-          );
-          if (response.ok) {
-            const data = await response.json();
-            this.userId = data.user.id;
-            localStorage.setItem("token", data.jwt);
+          })
+
+          if (signUpError) throw signUpError;
+
+          if (user) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                username: this.username,
+              })
+
+            if (profileError) throw profileError;
+
+            this.userId = user.id;
             this.isRegistered = true;
-          } else {
-            const errorData = await response.json();
-            console.error(`Erreur lors de l'inscription: ${errorData.message}`);
+            this.errorMessage = "";
           }
         } catch (error) {
-          console.error("Erreur:", error);
+          console.error("Erreur lors de l'inscription:", error.message);
+          this.errorMessage = error.message;
         }
       },
       async updateAndRedirect() {
         try {
-          const response = await fetch(
-            `http://localhost:1337/api/users/${this.userId}`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-              body: JSON.stringify({
-                Prenom: this.prenom,
-                Nom: this.nom,
-                Biographie: this.biographie,
-                Birth: this.birth,
-              }),
-            }
-          );
-          if (response.ok) {
-            window.location.href = "/profile";
-          } else {
-            const errorData = await response.json();
-            console.error(
-              `Erreur lors de la mise à jour des informations: ${errorData.message}`
-            );
-          }
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              prenom: this.prenom,
+              nom: this.nom,
+              biographie: this.biographie,
+              birth: this.birth,
+            })
+            .eq('id', this.userId)
+
+          if (error) throw error;
+
+          window.location.href = "/profile";
         } catch (error) {
-          console.error("Erreur:", error);
+          console.error("Erreur lors de la mise à jour des informations:", error.message);
         }
       },
       redirectToLogin() {
@@ -430,6 +446,15 @@
     text-align: center; 
     margin-top: 20px;
   }
+}
+
+.error-message {
+  color: #ff4444;
+  background-color: rgba(255, 68, 68, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
   </style>

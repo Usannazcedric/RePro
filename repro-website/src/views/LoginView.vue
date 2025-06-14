@@ -25,9 +25,17 @@
             Connectez vous dès maintenant <span class="blue-exclamation">!</span>
           </h1>
           <form @submit.prevent="login">
+            <div v-if="errorMessage" class="error-message">
+              {{ errorMessage }}
+              <div v-if="errorMessage.includes('confirmer votre email')" class="resend-confirmation">
+                <button type="button" @click="resendConfirmationEmail" class="resend-button">
+                  Renvoyer l'email de confirmation
+                </button>
+              </div>
+            </div>
             <div class="input-container">
-              <label for="username">Nom d'utilisateur</label>
-              <input type="text" id="username" v-model="username" required />
+              <label for="email">Email</label>
+              <input type="email" id="email" v-model="email" required />
             </div>
             <div class="input-container">
               <label for="password">Mot de passe</label>
@@ -46,40 +54,78 @@
     </div>
   </template>
   
-  
   <script>
+  import { supabase } from '../supabase'
+  import { useRouter } from 'vue-router'
+  
   export default {
+    setup() {
+      const router = useRouter()
+      return { router }
+    },
     data() {
       return {
-        username: "",
+        email: "",
         password: "",
+        errorMessage: "",
       };
     },
     methods: {
       async login() {
+        this.errorMessage = "";
         try {
-          const response = await fetch("http://localhost:1337/api/auth/local", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              identifier: this.username,
-              password: this.password,
-            }),
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: this.email,
+            password: this.password,
           });
-          if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem("token", data.jwt);
-            window.location.href = "/profile";
-          } else {
-            const errorData = await response.json();
-            console.error(`Erreur lors de la connexion: ${errorData.message}`);
+
+          if (error) throw error;
+
+          if (data.user) {
+            // Récupérer le profil de l'utilisateur
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+
+            if (profileError) {
+              console.error("Erreur lors de la récupération du profil:", profileError.message);
+            } else if (profile) {
+              localStorage.setItem('userProfile', JSON.stringify(profile));
+            }
+
+            // Utiliser le router pour la redirection
+            await this.router.push('/profile')
           }
         } catch (error) {
-          console.error("Erreur:", error);
+          console.error("Erreur lors de la connexion:", error.message);
+          if (error.message === "Email not confirmed") {
+            this.errorMessage = "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.";
+          } else if (error.message.includes("Invalid login credentials")) {
+            this.errorMessage = "Email ou mot de passe incorrect";
+          } else {
+            this.errorMessage = "Une erreur est survenue lors de la connexion";
+          }
         }
       },
+
+      async resendConfirmationEmail() {
+        try {
+          const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email: this.email
+          });
+
+          if (error) throw error;
+
+          this.errorMessage = "Un nouveau mail de confirmation a été envoyé. Veuillez vérifier votre boîte de réception.";
+        } catch (error) {
+          console.error("Erreur lors de l'envoi du mail de confirmation:", error.message);
+          this.errorMessage = "Impossible d'envoyer le mail de confirmation. Veuillez réessayer plus tard.";
+        }
+      },
+
       redirectToRegister() {
         window.location.href = "/register";
       },
@@ -88,7 +134,16 @@
   </script>
   
   <style scoped>
-    .forgot-password {
+  .error-message {
+    color: #ff4444;
+    background-color: rgba(255, 68, 68, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .forgot-password {
     text-align: right;
     margin-top: 5px;
     margin-bottom: 25px;
@@ -103,6 +158,7 @@
   .forgot-password a:hover {
     text-decoration: underline;
   }
+  
   .free-trial {
     font-size: 1.3em;
     margin-bottom: 20px;
@@ -275,7 +331,7 @@
   
   .login-link {
     text-align: right;
-    margin-top: 20px;
+    margin-top: 10px;
   }
   
   .login-link a {
@@ -324,16 +380,28 @@
       gap: 5px;
     }
   
-    .background-image {
-      width: 100%;
-      height: auto;
-      object-fit: cover;
-    }
-  
     .login-link {
       text-align: center;
       margin-top: 20px;
     }
+  }
+
+  .resend-confirmation {
+    margin-top: 10px;
+  }
+
+  .resend-button {
+    background: none;
+    border: none;
+    color: #0084ff;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+  }
+
+  .resend-button:hover {
+    color: #007bff;
   }
   </style>
   

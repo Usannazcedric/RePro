@@ -8,82 +8,155 @@ const app = express();
 const port = 3000;
 const upload = multer({ dest: 'uploads/' });
 
+// Configuration de LM Studio
+const LM_STUDIO_URL = process.env.LM_STUDIO_URL || 'http://192.168.135.106:1234';
+
 app.use(require('cors')());
+app.use(express.json());
+
+// Vérification de la connexion à LM Studio
+async function checkLMStudioConnection() {
+  try {
+    await axios.get(`${LM_STUDIO_URL}/v1/models`);
+    console.log('✅ Connexion à LM Studio établie');
+    return true;
+  } catch (error) {
+    console.error('❌ Impossible de se connecter à LM Studio:', error.message);
+    return false;
+  }
+}
 
 app.post('/api/analyze-ebook', upload.single('ebook'), async (req, res) => {
   const filePath = req.file.path;
 
   try {
+    console.log('📚 Lecture du PDF...');
     const dataBuffer = fs.readFileSync(filePath);
     const pdfData = await pdfParse(dataBuffer);
-    const text = pdfData.text.slice(0, 8000); // tronque long PDF
+    const text = pdfData.text.slice(0, 8000);
+    console.log('✅ PDF lu avec succès');
 
+    console.log('🤖 Envoi à LM Studio...');
     const prompt = buildPrompt(text);
     const aiResponse = await callLMStudio(prompt);
+    console.log('✅ Réponse reçue de LM Studio');
+    
+    console.log('🔍 Parsing de la réponse...');
+    const { summary, quizzes, tips } = parseAIResponse(aiResponse);
+    console.log('✅ Parsing réussi');
 
     fs.unlinkSync(filePath);
-    res.json({ generatedContent: aiResponse });
+    res.json({ 
+      summary: summary,
+      quizzes: quizzes,
+      tips: tips
+    });
 
   } catch (err) {
-    console.error(err);
-    fs.unlinkSync(filePath);
-    res.status(500).json({ error: 'Erreur traitement PDF' });
+    console.error('❌ Erreur:', err.message);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    res.status(500).json({ 
+      error: 'Erreur lors de la génération du contenu',
+      details: err.message
+    });
   }
 });
 
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`✅ Serveur backend en écoute sur http://localhost:${port}`);
+  const isLMStudioConnected = await checkLMStudioConnection();
+  if (!isLMStudioConnected) {
+    console.warn('⚠️ Le serveur démarre mais LM Studio n\'est pas accessible');
+  }
 });
 
 function buildPrompt(text) {
-    return `
-  Tu es une IA éducative spécialisée dans la rédaction de contenus pédagogiques en français parfait (sans fautes de grammaire, conjugaison ou syntaxe).
-  
-  Voici un extrait de cours à résumer et transformer :
-  
-  """
-  ${text}
-  """
-  
-  Ta mission :
-  
-  1. ✏️ Rédige un résumé clair, fluide, bien structuré, en français impeccable, de 2 à 3 phrases.
-  2. 🧠 Crée 3 questions de quiz sous la forme :
-     - Q1 : [texte de la question]
-       A) ...
-       B) ...
-       C) ...
-       D) ...
-       Réponse correcte : ...
-     - Pas de balises HTML ni de formatage Markdown (pas de \`\`\`scss ni autre).
-  3. 💡 Donne une astuce ou un point clé à retenir à la fin, dans une phrase concise et bien rédigée.
-  
-  Ne numérote pas les grandes sections (Résumé, Quiz, Astuce), mais commence directement par le texte, dans cet ordre :
-  
-  Résumé  
-  Questions de quiz  
-  Astuce
-  
-  Respecte imperativement les retours à la ligne pour faciliter la lecture, d'abord, le résumé du cours, ensuite retour a ligne, les quiz, et enfin retour a ligne, l'astuce.
-  `;
+  return `
+Tu es une IA éducative spécialisée dans la création de contenus pédagogiques en français.
+
+Voici un extrait de cours à analyser :
+
+"""
+${text}
+"""
+
+Génère une réponse structurée avec le format JSON suivant :
+
+{
+  "summary": "Le résumé du cours en 2-3 phrases",
+  "quizzes": [
+    {
+      "question": "Question 1",
+      "options": {
+        "A": "Réponse A",
+        "B": "Réponse B",
+        "C": "Réponse C",
+        "D": "Réponse D"
+      },
+      "correctAnswer": "A"
+    },
+    // 2 autres questions similaires
+  ],
+  "tips": "Une astuce ou point clé à retenir"
+}
+
+Important:
+1. Le résumé doit être clair et bien structuré
+2. Crée exactement 3 questions de quiz
+3. L'astuce doit être concise et pertinente
+4. Respecte STRICTEMENT le format JSON
+`;
+}
+
+function parseAIResponse(response) {
+  try {
+    console.log('🔍 Début du parsing de la réponse...');
+    
+    // Si la réponse est déjà un objet (cas de LM Studio)
+    if (typeof response === 'object' && response.choices) {
+      const content = response.choices[0].message.content;
+      console.log('📝 Contenu brut reçu:', content);
+      
+      // Nettoie la réponse pour s'assurer qu'elle ne contient que du JSON
+      const jsonStr = content.replace(/```json\n?|\n?```/g, '').trim();
+      console.log('🧹 JSON nettoyé:', jsonStr);
+      
+      const parsed = JSON.parse(jsonStr);
+      console.log('✅ Parsing JSON réussi');
+      
+      return {
+        summary: parsed.summary,
+        quizzes: parsed.quizzes,
+        tips: parsed.tips
+      };
+    }
+
+    throw new Error('Format de réponse invalide de LM Studio');
+  } catch (error) {
+    console.error('❌ Erreur parsing réponse IA:', error);
+    throw new Error(`Erreur de parsing: ${error.message}`);
   }
-  
+}
 
 async function callLMStudio(prompt) {
   try {
-    const response = await axios.post('http://127.0.0.1:1234/v1/chat/completions', {
-      model: "local-model", // nom par défaut dans LM Studio
+    console.log('📡 Envoi de la requête à LM Studio...');
+    const response = await axios.post(`${LM_STUDIO_URL}/v1/chat/completions`, {
+      model: "local-model",
       messages: [
-        { role: "system", content: "Tu es un assistant pédagogique." },
+        { role: "system", content: "Tu es un assistant pédagogique qui répond uniquement en JSON valide." },
         { role: "user", content: prompt }
       ],
       temperature: 0.7,
       max_tokens: 1000
     });
 
-    return response.data.choices[0].message.content;
+    console.log('✅ Réponse reçue de LM Studio');
+    return response.data;
   } catch (error) {
-    console.error('❌ Erreur appel LM Studio :', error);
-    return 'Erreur IA';
+    console.error('❌ Erreur appel LM Studio:', error.message);
+    throw new Error(`Erreur de communication avec LM Studio: ${error.message}`);
   }
 }
