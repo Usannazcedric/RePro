@@ -9,7 +9,7 @@ const port = 3000;
 const upload = multer({ dest: 'uploads/' });
 
 // Configuration de LM Studio
-const LM_STUDIO_URL = process.env.LM_STUDIO_URL || 'http://192.168.135.106:1234';
+const LM_STUDIO_URL = process.env.LM_STUDIO_URL || 'http://192.168.1.11:1234';
 
 app.use(require('cors')());
 app.use(express.json());

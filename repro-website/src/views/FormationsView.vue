@@ -1,102 +1,35 @@
 <template>
     <div class="p-4">
-      <h1 class="text-2xl font-bold mb-4">Téléversez votre formation (ebook)</h1>
-  
-      <!-- Zone de drop -->
-      <div
-        class="border-2 border-dashed border-gray-400 p-8 text-center rounded-lg"
-        @dragover.prevent
-        @drop.prevent="handleDrop"
-      >
-        <p class="text-gray-600">Glissez-déposez votre ebook ici</p>
-        <input type="file" @change="handleFileChange" class="mt-4" accept=".pdf" />
-      </div>
-  
-      <!-- Liste des fichiers -->
-      <div v-if="ebooks.length" class="mt-6">
-        <h2 class="text-xl font-semibold mb-2">Ebooks téléversés</h2>
-        <ul>
-          <li v-for="(ebook, index) in ebooks" :key="index" class="mb-2">
-            {{ ebook.name }}
-            <button
-              @click="generateContent(ebook)"
-              class="ml-4 bg-blue-500 text-white px-2 py-1 rounded"
-            >
-              Générer contenu IA
-            </button>
-          </li>
-        </ul>
-      </div>
-  
-      <!-- Loader étapes -->
-      <div v-if="loading" class="mt-6 bg-white border rounded-lg p-4 shadow">
-        <h2 class="text-xl font-semibold mb-4">📚 Génération en cours...</h2>
-        <ul class="space-y-2">
-          <li v-for="(step, index) in steps" :key="index" class="flex items-center mb-2">
-            <span v-if="index < currentStep - 1">✅</span>
-            <span v-else-if="index === currentStep - 1" class="loader"></span>
-            <span v-else>⬜</span>
-            <span class="ml-2">{{ step }}</span>
-          </li>
-        </ul>
-      </div>
-  
-      <!-- Résultat -->
-      <div v-if="aiContent && !loading" class="mt-6 space-y-6">
-        <!-- Bouton de sauvegarde -->
-        <div class="flex justify-end mb-4">
-          <button
-            @click="saveContent"
-            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center"
-            :disabled="saving"
-          >
-            <span v-if="!saving">💾 Sauvegarder cette formation</span>
-            <span v-else class="flex items-center">
-              <span class="loader mr-2"></span>
-              Sauvegarde en cours...
-            </span>
-          </button>
-        </div>
-  
-        <!-- Résumé -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-4">📝 Résumé</h2>
-          <p class="text-gray-700">{{ aiContent.summary }}</p>
-        </div>
-  
-        <!-- Quiz -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-4">🎯 Quiz</h2>
-          <div v-for="(quiz, index) in aiContent.quizzes" :key="index" class="mb-6">
-            <p class="font-medium mb-3">{{ quiz.question }}</p>
-            <div class="space-y-2">
-              <div v-for="(option, letter) in quiz.options" :key="letter" 
-                   class="p-2 rounded cursor-pointer"
-                   :class="{'bg-green-100': showAnswers && letter === quiz.correctAnswer,
-                           'hover:bg-gray-100': !showAnswers}"
-                   @click="selectAnswer(index, letter)">
-                {{ letter }}) {{ option }}
-              </div>
+      <div v-if="!showWizard">
+        <h1 class="text-2xl font-bold mb-4">Mes formations</h1>
+        <button class="add-btn" @click="showWizard = true">Ajouter une formation</button>
+        <div v-if="loadingFormations" class="mt-8 text-gray-400">Chargement...</div>
+        <div v-else>
+          <div v-if="formations.length === 0" class="mt-8 text-center">
+            <p class="text-lg mb-4">Vous n'avez pas de formations.</p>
+            <button class="add-btn" @click="showWizard = true">Publier votre première formation</button>
+          </div>
+          <div v-else class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div v-for="formation in formations" :key="formation.id" class="formation-card">
+              <h2 class="font-bold text-lg mb-2">{{ formation.title }}</h2>
+              <div class="text-sm text-gray-400 mb-1">Thème : {{ formation.theme }}</div>
+              <div class="text-sm text-gray-400 mb-1">Publié le : {{ formatDate(formation.created_at) }}</div>
+              <div class="text-gray-300 mb-2">{{ formation.description }}</div>
+              <div class="text-xs text-gray-500">Résumé IA : {{ formation.summary }}</div>
             </div>
           </div>
-          <button @click="showAnswers = !showAnswers" 
-                  class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
-            {{ showAnswers ? 'Masquer les réponses' : 'Voir les réponses' }}
-          </button>
         </div>
-  
-        <!-- Astuces -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-4">💡 Astuce clé</h2>
-          <p class="text-gray-700">{{ aiContent.tips }}</p>
-        </div>
+      </div>
+      <div v-else>
+        <AjouterFormationWizard @close="showWizard = false" />
       </div>
     </div>
   </template>
   
   <script setup>
-  import { ref } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { supabase } from '../supabase'
+  import AjouterFormationWizard from './AjouterFormationWizard.vue'
   
   const ebooks = ref([])
   const aiContent = ref(null)
@@ -104,6 +37,9 @@
   const saving = ref(false)
   const currentStep = ref(0)
   const showAnswers = ref(false)
+  const showWizard = ref(false)
+  const formations = ref([])
+  const loadingFormations = ref(true)
   
   const steps = [
     'Lecture du fichier',
@@ -112,6 +48,19 @@
     'Création des quiz',
     'Finalisation'
   ]
+  
+  const LOCAL_STORAGE_KEY = 'aiContentFormation';
+  
+  onMounted(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (saved) {
+      try {
+        aiContent.value = JSON.parse(saved)
+      } catch (e) {
+        aiContent.value = null
+      }
+    }
+  })
   
   function handleDrop(event) {
     const files = event.dataTransfer.files
@@ -154,6 +103,13 @@
       }
   
       console.log('📤 Envoi du fichier au serveur...')
+      // Suppression de l'upload Supabase Storage
+      // const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      // const path = `pdfs/${Date.now()}_${cleanName}`
+      // const uploadResult = await supabase.storage.from('formations-pdf').upload(path, file, { upsert: true })
+      // const { data: uploadData, error } = uploadResult
+      // if (error) { throw new Error(error.message) }
+  
       const response = await fetch('http://localhost:3000/api/analyze-ebook', {
         method: 'POST',
         body: formData
@@ -176,6 +132,8 @@
         console.log('✅ Données valides reçues')
         aiContent.value = data
         showAnswers.value = false
+        // Sauvegarde dans le localStorage
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data))
       } else {
         console.error('❌ Format de données incorrect:', data)
         throw new Error('Les données reçues ne sont pas dans le format attendu')
@@ -210,6 +168,8 @@
       if (error) throw error
   
       alert('Formation sauvegardée avec succès !')
+
+      localStorage.removeItem(LOCAL_STORAGE_KEY)
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error)
       alert('Erreur lors de la sauvegarde. Veuillez réessayer.')
@@ -228,6 +188,35 @@
   function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
+  
+  function formatDate(dateStr) {
+    if (!dateStr) return ''
+    return new Date(dateStr).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
+  }
+  
+  async function fetchFormations() {
+    loadingFormations.value = true
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      formations.value = []
+      loadingFormations.value = false
+      return
+    }
+    const { data, error } = await supabase
+      .from('formations')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+    formations.value = data || []
+    loadingFormations.value = false
+  }
+  
+  onMounted(fetchFormations)
+  
+  // Refresh la liste après ajout
+  watch(showWizard, (val) => {
+    if (!val) fetchFormations()
+  })
   </script>
   
   <style scoped>
@@ -246,6 +235,25 @@
     to {
       transform: rotate(360deg);
     }
+  }
+  
+  .add-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 2rem;
+  }
+  
+  .formation-card {
+    background: #23232d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1rem;
   }
   </style>
   
