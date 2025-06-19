@@ -2,7 +2,7 @@
   <div class="verification-container">
     <h2 class="section-title">Vérifications</h2>
     <p class="verif-desc">
-      Conformément à la législation sur la vente de contenus numériques, nous devons recueillir certaines informations vous concernant, telles que votre identité et la nature des formations proposées. Cela permet d'assurer la transparence de votre offre et la sécurité des utilisateurs. Ces données restent strictement confidentielles et sont protégées sur notre plateforme Repro. Elles sont utilisées uniquement pour garantir une expérience fiable et conforme aux exigences légales.
+      Conformément à la législation sur la vente de contenus numériques, nous devons recueillir certaines informations vous concernant, telles que votre identité et la nature des formations proposées. Cela permet d'assurer la transparence de votre offre et la sécurité des utilisateurs. Ces données restent strictement confidentielles et sont protégées sur notre plateforme SnapRead. Elles sont utilisées uniquement pour garantir une expérience fiable et conforme aux exigences légales.
     </p>
     <form class="verif-form" @submit.prevent="submitVerification">
       <div class="verif-grid">

@@ -104,7 +104,7 @@ export default {
               login_at: new Date()
             }]);
           } catch (e) {
-            console.warn('Impossible d’enregistrer la session:', e);
+            console.warn('Impossible d\'enregistrer la session:', e);
           }
 
           // Utiliser le router pour la redirection

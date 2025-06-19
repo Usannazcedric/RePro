@@ -35,14 +35,38 @@
         </div>
       </div>
       <nav class="navigation">
-        <RouterLink to="/profile/profile">Profil</RouterLink>
-        <RouterLink to="/profile/notifications">Notifications</RouterLink>
-        <RouterLink to="/profile/statistics">Statistiques</RouterLink>
-        <RouterLink to="/profile/affiliates">Affiliés</RouterLink>
-        <RouterLink to="/profile/privacy">Confidentialité</RouterLink>
-        <RouterLink to="/profile/verification">Vérification en cours</RouterLink>
-        <RouterLink to="/profile/settings">Paramètres</RouterLink>
-        <RouterLink to="/profile/transactions">Transactions</RouterLink>
+        <RouterLink to="/profile/profile" class="nav-link" :class="{ active: $route.path === '/profile/profile' }">
+          <img :src="$route.path === '/profile/profile' ? '/profile purple.svg' : '/profile grey.svg'" class="nav-icon" alt="Profil" />
+          <span>Profil</span>
+        </RouterLink>
+        <RouterLink to="/profile/notifications" class="nav-link" :class="{ active: $route.path === '/profile/notifications' }">
+          <img :src="$route.path === '/profile/notifications' ? '/notif purple.svg' : '/notif grey.svg'" class="nav-icon" alt="Notifications" />
+          <span>Notifications</span>
+        </RouterLink>
+        <RouterLink to="/profile/statistics" class="nav-link" :class="{ active: $route.path === '/profile/statistics' }">
+          <img :src="$route.path === '/profile/statistics' ? '/stat purple.svg' : '/stat grey.svg'" class="nav-icon" alt="Statistiques" />
+          <span>Statistiques</span>
+        </RouterLink>
+        <RouterLink to="/profile/affiliates" class="nav-link" :class="{ active: $route.path === '/profile/affiliates' }">
+          <img :src="$route.path === '/profile/affiliates' ? '/affiliate purple.svg' : '/affiliate grey.svg'" class="nav-icon" alt="Affiliés" />
+          <span>Affiliés</span>
+        </RouterLink>
+        <RouterLink to="/profile/privacy" class="nav-link" :class="{ active: $route.path === '/profile/privacy' }">
+          <img :src="$route.path === '/profile/privacy' ? '/privacy purple.svg' : '/privacy grey.svg'" class="nav-icon" alt="Confidentialité" />
+          <span>Confidentialité</span>
+        </RouterLink>
+        <RouterLink to="/profile/verification" class="nav-link" :class="{ active: $route.path === '/profile/verification' }">
+          <img :src="$route.path === '/profile/verification' ? '/verif purple.svg' : '/verif grey.svg'" class="nav-icon" alt="Vérification en cours" />
+          <span>Vérification en cours</span>
+        </RouterLink>
+        <RouterLink to="/profile/settings" class="nav-link" :class="{ active: $route.path === '/profile/settings' }">
+          <img :src="$route.path === '/profile/settings' ? '/setting purple.svg' : '/setting grey.svg'" class="nav-icon" alt="Paramètres" />
+          <span>Paramètres</span>
+        </RouterLink>
+        <RouterLink to="/profile/transactions" class="nav-link" :class="{ active: $route.path === '/profile/transactions' }">
+          <img :src="$route.path === '/profile/transactions' ? '/tx purple.svg' : '/tx grey.svg'" class="nav-icon" alt="Transactions" />
+          <span>Transactions</span>
+        </RouterLink>
         <a href="#" @click.prevent="logout" class="logout-link">Se déconnecter</a>
       </nav>
     </div>
@@ -191,6 +215,17 @@ export default {
   }
 }
 </script>
+
+<style>
+:global(html), :global(body) {
+  overflow: hidden !important;
+  height: 100%;
+  scrollbar-width: none; /* Firefox */
+}
+:global(html)::-webkit-scrollbar, :global(body)::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+</style>
 
 <style scoped>
 .user-info {
@@ -377,7 +412,25 @@ h2 {
   width: 100%;
 }
 
-.navigation a, .logout-link {
+.nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 32px;
+  background: #7376FF;
+  border-top-right-radius: 1000000px;
+  border-bottom-right-radius: 1000000px;
+}
+
+
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   text-decoration: none;
   color: #6b7280;
   padding: 12px 16px;
@@ -386,28 +439,43 @@ h2 {
   cursor: pointer;
   font-weight: 500;
   margin-bottom: 4px;
+  font-size: 1.08rem;
 }
 
-.navigation a:hover, .logout-link:hover {
-  background-color: #f3f4f6;
+.nav-link .nav-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.nav-link.active, .nav-link.router-link-active {
   color: #7376FF;
 }
 
-.navigation a.router-link-active {
-  background-color: #7376FF;
-  color: white;
+.nav-link.active span, .nav-link.router-link-active span {
+  color: #7376FF;
 }
 
 .logout-link {
-  margin-top: 20px;
-  color: #ef4444;
-  border: 1px solid #fecaca;
+  margin-top: 24px;
+  padding: 12px 0;
+  border: 1.5px solid #7376FF;
+  border-radius: 14px;
+  text-align: center;
+  color: #7376FF;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: 'Nunito', sans-serif;
+  display: block;
+  width: 100%;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
 }
 
 .logout-link:hover {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background-color: #f1f2ff;
 }
+
 
 .content {
   flex: 1;
@@ -601,10 +669,4 @@ h2 {
 .verif-btn:hover {
   background: #5d60d6;
 }
-
-:global(html), :global(body) {
-  overflow: hidden !important;
-  height: 100%;
-}
-
 </style>

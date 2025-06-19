@@ -283,4 +283,10 @@ body {
   color: #222;
   font-family: 'Nunito', Arial, sans-serif;
 }
+html, body {
+  scrollbar-width: none; /* Firefox */
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
 </style>
