@@ -63,7 +63,7 @@ export default {
       return this.sessions.length > 0 ? this.sessions[0] : null;
     },
     pastSessions() {
-      return this.sessions.slice(1, 5); // Affiche les 4 dernières
+      return this.sessions.slice(1, 5); 
     }
   }
 }
@@ -71,50 +71,60 @@ export default {
 
 <style scoped>
 .privacy-sessions {
-  /* background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07); */
-  padding: 32px 28px;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 16px;
 }
+
 .section-title {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: #7376FF;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   font-family: 'Nunito', sans-serif;
 }
+
 .session-card {
   background: #f8f8fa;
-  border-radius: 18px;
-  padding: 18px 24px;
-  margin-bottom: 18px;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* comme input */
 }
+
 .session-info {
   display: flex;
-  gap: 32px;
+  gap: 24px;
   align-items: center;
   width: 100%;
+  flex-wrap: wrap;
 }
+
 .browser {
   font-weight: 700;
   color: #222;
+  font-size: 0.95rem;
 }
+
 .city {
-  color: #888;
+  color: #666;
   font-weight: 600;
+  font-size: 0.9rem;
 }
+
 .date {
   color: #444;
   font-weight: 700;
+  font-size: 0.9rem;
 }
+
 .active {
   color: #1976d2;
   font-weight: 700;
   margin-left: auto;
+  font-size: 0.9rem;
 }
 </style>

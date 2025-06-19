@@ -35,17 +35,30 @@
           <div class="verif-status">Complet</div>
           <div class="verif-bar verif-bar-complete"></div>
         </div>
-        <div class="verif-level">
+        <div class="verif-level" :class="{ 'verif-complete': isVerificationComplete() }">
           <div class="verif-label">Niveau 2</div>
-          <div class="verif-status">Veuillez remplir</div>
-          <div class="verif-bar"></div>
-          <div class="verif-desc">
+          <div class="verif-status">
+            <template v-if="isVerificationComplete()">Complet</template>
+            <template v-else>Veuillez remplir</template>
+          </div>
+          <div class="verif-bar" :class="{ 'verif-bar-complete': isVerificationComplete() }"></div>
+          <div class="verif-desc" v-if="!isVerificationComplete()">
             <b>Vérifiez pour compléter le niveau 2</b>
             <p>Avant de pouvoir augmenter votre nombre de dépôt de formation, nous devons en savoir davantage sur votre identité, en vertu des lois contre la falsification d'identité.</p>
             <button class="verif-btn" @click="goToVerification">Compléter le niveau</button>
           </div>
         </div>
-        <div class="verif-level verif-locked">
+        <div v-if="isVerificationComplete()" class="verif-level">
+          <div class="verif-label">Niveau 3</div>
+          <div class="verif-status">Non vérifié</div>
+          <div class="verif-bar"></div>
+          <div class="verif-desc">
+            <b>Vérification avancée (KYC)</b>
+            <p>Pour accéder à toutes les fonctionnalités, veuillez compléter la vérification d'identité avancée.</p>
+            <button class="verif-btn" @click="goToKYC">Démarrer la vérification KYC</button>
+          </div>
+        </div>
+        <div v-else class="verif-level verif-locked">
           <div class="verif-label">Niveau 3</div>
           <div class="verif-status">Verrouillé</div>
           <div class="verif-bar verif-bar-locked"></div>
@@ -67,11 +80,13 @@ export default {
         username: '',
         email: '',
         phone: ''
-      }
+      },
+      verification: null
     };
   },
   async created() {
     await this.checkAuthentication();
+    await this.fetchVerification();
   },
   methods: {
     async checkAuthentication() {
@@ -98,6 +113,28 @@ export default {
       } catch (error) {
         alert('Erreur lors de la récupération du profil.');
       }
+    },
+    async fetchVerification() {
+      if (!this.user) return;
+      const { data, error } = await supabase
+        .from('verifications')
+        .select('*')
+        .eq('user_id', this.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (!error && data && data.length > 0) {
+        this.verification = data[0];
+      } else {
+        this.verification = null;
+      }
+    },
+    isVerificationComplete() {
+      const v = this.verification;
+      if (!v) return false;
+      return (
+        v.civility && v.firstname && v.lastname && v.birthdate &&
+        v.address && v.zip && v.city && v.country && v.certified
+      );
     },
     async updateField(field) {
       let value = this.editProfile[field];
@@ -138,6 +175,9 @@ export default {
     },
     goToVerification() {
       this.$router.push('/profile/verification');
+    },
+    goToKYC() {
+      alert('KYC à venir !');
     }
   }
 }
@@ -197,11 +237,12 @@ export default {
   padding: 10px 16px;
   border-radius: 10px;
   border: 1.5px solid #ececec;
-  background: #f8f8fa;
+  background: #ffffff;
   font-size: 1rem;
   font-family: 'Nunito', sans-serif;
   color: #222;
   transition: border 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .edit-input:focus {
@@ -210,7 +251,7 @@ export default {
 }
 
 .edit-btn {
-  background: #ececec;
+  background: #ffffff;
   color: #7376FF;
   border: none;
   border-radius: 8px;
@@ -219,7 +260,8 @@ export default {
   font-family: 'Nunito', sans-serif;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
-
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border: 1.5px solid #ececec;
 }
 
 .edit-btn:hover {

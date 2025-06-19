@@ -111,55 +111,70 @@ export default {
       return re.test(email);
     },
     async register() {
-      this.errorMessage = "";
+  this.errorMessage = "";
 
-      if (this.password !== this.confirmPassword) {
-        this.errorMessage = "Les mots de passe ne correspondent pas.";
-        return;
-      }
+  if (this.password !== this.confirmPassword) {
+    this.errorMessage = "Les mots de passe ne correspondent pas.";
+    return;
+  }
 
-      if (!this.validateEmail(this.email)) {
-        this.errorMessage = "L'adresse email n'est pas valide.";
-        return;
-      }
+  if (!this.validateEmail(this.email)) {
+    this.errorMessage = "L'adresse email n'est pas valide.";
+    return;
+  }
 
-      if (this.password.length < 6) {
-        this.errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
-        return;
-      }
+  if (this.password.length < 6) {
+    this.errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+    return;
+  }
 
-      try {
-        const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-          email: this.email,
-          password: this.password,
-          options: {
-            data: {
-              username: this.username,
-            }
-          }
-        })
-
-        if (signUpError) throw signUpError;
-
-        if (user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              username: this.username,
-            })
-
-          if (profileError) throw profileError;
-
-          this.userId = user.id;
-          this.isRegistered = true;
-          this.errorMessage = "";
+  try {
+    // 1. Création du compte
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: this.email,
+      password: this.password,
+      options: {
+        data: {
+          username: this.username,
         }
-      } catch (error) {
-        console.error("Erreur lors de l'inscription:", error.message);
-        this.errorMessage = error.message;
       }
-    },
+    });
+
+    if (signUpError) throw signUpError;
+
+    // 2. Récupère la session (pour être sûr que l'utilisateur est bien authentifié)
+    let user = signUpData.user;
+    if (!user) {
+      // Parfois, user n'est pas dans data, il faut attendre la session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        this.errorMessage = "Veuillez vérifier votre email pour activer votre compte.";
+        return;
+      }
+      user = session.user;
+    }
+
+    // 3. Upsert du profil (avec la session active)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        username: this.username,
+      });
+
+    if (profileError) {
+      this.errorMessage = "Erreur lors de la création du profil : " + profileError.message;
+      return;
+    }
+
+    this.userId = user.id;
+    this.isRegistered = true;
+    this.errorMessage = "";
+  } catch (error) {
+    console.error("Erreur lors de l'inscription:", error.message);
+    this.errorMessage = error.message;
+  }
+},
     async updateAndRedirect() {
       try {
         const { error } = await supabase
