@@ -3,19 +3,19 @@
       <div v-if="!showWizard">
         <h1 class="text-2xl font-bold mb-4">Mes formations</h1>
         <button class="add-btn" @click="showWizard = true">Ajouter une formation</button>
-        <div v-if="loadingFormations" class="mt-8 text-gray-400">Chargement...</div>
+        <div v-if="loadingFormations" class="mt-8 text-gray-500">Chargement...</div>
         <div v-else>
           <div v-if="formations.length === 0" class="mt-8 text-center">
-            <p class="text-lg mb-4">Vous n'avez pas de formations.</p>
+            <p class="text-lg mb-4 text-gray-600">Vous n'avez pas de formations.</p>
             <button class="add-btn" @click="showWizard = true">Publier votre première formation</button>
           </div>
           <div v-else class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div v-for="formation in formations" :key="formation.id" class="formation-card">
-              <h2 class="font-bold text-lg mb-2">{{ formation.title }}</h2>
-              <div class="text-sm text-gray-400 mb-1">Thème : {{ formation.theme }}</div>
-              <div class="text-sm text-gray-400 mb-1">Publié le : {{ formatDate(formation.created_at) }}</div>
-              <div class="text-gray-300 mb-2">{{ formation.description }}</div>
-              <div class="text-xs text-gray-500">Résumé IA : {{ formation.summary }}</div>
+              <h2 class="font-bold text-lg mb-2 text-gray-800">{{ formation.title }}</h2>
+              <div class="text-sm text-gray-500 mb-1">Thème : {{ formation.theme }}</div>
+              <div class="text-sm text-gray-500 mb-1">Publié le : {{ formatDate(formation.created_at) }}</div>
+              <div class="text-gray-600 mb-2">{{ formation.description }}</div>
+              <div class="text-xs text-gray-400">Résumé IA : {{ formation.summary }}</div>
             </div>
           </div>
         </div>
@@ -103,12 +103,6 @@
       }
   
       console.log('📤 Envoi du fichier au serveur...')
-      // Suppression de l'upload Supabase Storage
-      // const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-      // const path = `pdfs/${Date.now()}_${cleanName}`
-      // const uploadResult = await supabase.storage.from('formations-pdf').upload(path, file, { upsert: true })
-      // const { data: uploadData, error } = uploadResult
-      // if (error) { throw new Error(error.message) }
   
       const response = await fetch('http://localhost:3000/api/analyze-ebook', {
         method: 'POST',
@@ -222,7 +216,7 @@
   <style scoped>
   .loader {
     border: 2px solid #ccc;
-    border-top-color: #3498db;
+    border-top-color: #7376FF;
     border-radius: 50%;
     width: 14px;
     height: 14px;
@@ -238,7 +232,7 @@
   }
   
   .add-btn {
-    background: #3b82f6;
+    background: #7376FF;
     color: white;
     border: none;
     border-radius: 8px;
@@ -246,14 +240,25 @@
     font-size: 1rem;
     cursor: pointer;
     margin-bottom: 2rem;
+    transition: background 0.2s;
+  }
+  
+  .add-btn:hover {
+    background: #5d60d6;
   }
   
   .formation-card {
-    background: #23232d;
+    background: #ffffff;
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+    transition: box-shadow 0.2s;
+  }
+  
+  .formation-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   }
   </style>
   

@@ -25,18 +25,18 @@
     </div>
     <div class="formations-list">
       <h1 class="title">Toutes les formations</h1>
-      <div v-if="loading" class="text-gray-400 mt-8">Chargement...</div>
+      <div v-if="loading" class="text-gray-500 mt-8">Chargement...</div>
       <div v-else>
-        <div v-if="filteredFormations.length === 0" class="text-center mt-8 text-gray-400">
+        <div v-if="filteredFormations.length === 0" class="text-center mt-8 text-gray-500">
           Aucune formation ne correspond à vos critères.
         </div>
         <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div v-for="formation in filteredFormations" :key="formation.id" class="formation-card">
-            <h2 class="font-bold text-lg mb-2">{{ formation.title }}</h2>
-            <div class="text-sm text-gray-400 mb-1">Thème : {{ formation.theme }}</div>
-            <div class="text-sm text-gray-400 mb-1">Publié le : {{ formatDate(formation.created_at) }}</div>
-            <div class="text-gray-300 mb-2">{{ formation.description }}</div>
-            <div class="text-xs text-gray-500">Résumé IA : {{ formation.summary }}</div>
+            <h2 class="font-bold text-lg mb-2 text-gray-800">{{ formation.title }}</h2>
+            <div class="text-sm text-gray-500 mb-1">Thème : {{ formation.theme }}</div>
+            <div class="text-sm text-gray-500 mb-1">Publié le : {{ formatDate(formation.created_at) }}</div>
+            <div class="text-gray-600 mb-2">{{ formation.description }}</div>
+            <div class="text-xs text-gray-400">Résumé IA : {{ formation.summary }}</div>
             <div class="text-xs text-gray-500 mt-1">Reconnu par l'État : <b>{{ formation.is_state_recognized ? 'Oui' : 'Non' }}</b></div>
           </div>
         </div>
@@ -103,30 +103,37 @@ onMounted(fetchFormations)
 }
 .filters {
   min-width: 260px;
-  background: #23232d;
+  background: #ffffff;
   border-radius: 14px;
   padding: 2rem 1.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  border: 1px solid #e5e7eb;
 }
 .filter-group label {
   font-weight: 500;
   margin-bottom: 0.3rem;
   display: block;
+  color: #374151;
 }
 .filter-group select, .filter-group input {
   width: 100%;
   padding: 0.5rem 0.8rem;
   border-radius: 8px;
-  border: 1px solid #3b3b4d;
-  background: #181824;
-  color: #fff;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
   margin-top: 0.2rem;
+  transition: border-color 0.2s;
+}
+.filter-group select:focus, .filter-group input:focus {
+  outline: none;
+  border-color: #7376FF;
 }
 .reset-btn {
-  background: #3b82f6;
+  background: #7376FF;
   color: white;
   border: none;
   border-radius: 8px;
@@ -134,6 +141,10 @@ onMounted(fetchFormations)
   font-size: 1rem;
   cursor: pointer;
   margin-top: 1rem;
+  transition: background 0.2s;
+}
+.reset-btn:hover {
+  background: #5d60d6;
 }
 .formations-list {
   flex: 1;
@@ -142,12 +153,18 @@ onMounted(fetchFormations)
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
+  color: #111827;
 }
 .formation-card {
-  background: #23232d;
+  background: #ffffff;
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+  transition: box-shadow 0.2s;
+}
+.formation-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 </style> 
