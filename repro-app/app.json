@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "SnapRead",
-    "slug": "SnapRead",
+    "name": "repro-app",
+    "slug": "repro-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "snapread",
+    "scheme": "reproapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
