@@ -1,41 +1,36 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+
+import { useColorScheme } from '../hooks/useColorScheme';
+import { interFonts } from '../constants/Fonts';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  const router = useRouter();
-  const segments = useSegments();
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const [loaded] = useFonts(interFonts);
 
   useEffect(() => {
-    if (!loaded) return;
-  
-    const isAtRoot = !segments[0] || segments[0] === '(tabs)';
-    if (isAtRoot && !hasRedirected) {
-      router.replace('/onboarding');
-      setHasRedirected(true);
-    } else {
-      setHasRedirected(true);
+    if (loaded) {
+      SplashScreen.hideAsync();
     }
-  }, [segments, router, loaded, hasRedirected]);
-  
+  }, [loaded]);
 
-  if (!loaded || !hasRedirected) {
-    return null; 
+  if (!loaded) {
+    return null;
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Slot />
-      <StatusBar style="auto" />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="boutique" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
     </ThemeProvider>
   );
 }

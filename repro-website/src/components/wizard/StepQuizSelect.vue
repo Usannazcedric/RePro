@@ -27,13 +27,24 @@
 
 <script setup>
 import { ref } from 'vue'
+
+const props = defineProps({
+  config: {
+    type: Object,
+    default: () => ({ chapters: 1, quizzes: 5 })
+  }
+})
+
 const emit = defineEmits(['next', 'back'])
-const chapters = ref(1)
-const quizzes = ref(5)
+
+const chapters = ref(props.config?.chapters || 1)
+const quizzes = ref(props.config?.quizzes || 5)
+
 function change(type, val) {
   if (type === 'chapters') chapters.value = Math.max(1, chapters.value + val)
   if (type === 'quizzes') quizzes.value = Math.max(1, quizzes.value + val)
 }
+
 function nextStep() {
   emit('next', { chapters: chapters.value, quizzes: quizzes.value })
 }

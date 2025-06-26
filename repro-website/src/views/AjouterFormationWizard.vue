@@ -27,6 +27,8 @@ const type = ref('pdf')
 const infos = ref({})
 const pdfUrl = ref('')
 const file = ref(null)
+const coverImage = ref(null)
+const coverImageUrl = ref('')
 const quizConfig = ref({ chapters: 1, quizzes: 5 })
 const iaResult = ref(null)
 
@@ -37,7 +39,11 @@ const steps = [
   },
   {
     component: StepInfos,
-    props: () => ({ infos: infos.value })
+    props: () => ({ 
+      infos: infos.value,
+      coverImage: coverImage.value,
+      coverImageUrl: coverImageUrl.value
+    })
   },
   {
     component: StepUpload,
@@ -45,7 +51,9 @@ const steps = [
   },
   {
     component: StepQuizSelect,
-    props: () => ({})
+    props: () => ({ 
+      config: quizConfig.value 
+    })
   },
   {
     component: StepLoading,
@@ -59,6 +67,8 @@ const steps = [
     props: () => ({
       infos: infos.value,
       pdfUrl: pdfUrl.value,
+      coverImageUrl: coverImageUrl.value,
+      quizConfig: quizConfig.value,
       result: iaResult.value
     })
   }
@@ -69,7 +79,11 @@ function handleNext(payload) {
     type.value = payload
     currentStep.value++
   } else if (currentStep.value === 1) {
-    infos.value = payload
+    infos.value = payload.infos
+    if (payload.coverImage) {
+      coverImage.value = payload.coverImage
+      coverImageUrl.value = payload.coverImageUrl
+    }
     currentStep.value++
   } else if (currentStep.value === 2) {
     file.value = payload.file
@@ -85,16 +99,20 @@ function handleNext(payload) {
     currentStep.value++
   }
 }
+
 function handleBack() {
   if (currentStep.value > 0) currentStep.value--
 }
+
 function handleSaved() {
-  // Optionnel : reset wizard ou rediriger
+  // Reset wizard
   currentStep.value = 0
   type.value = 'pdf'
   infos.value = {}
   pdfUrl.value = ''
   file.value = null
+  coverImage.value = null
+  coverImageUrl.value = ''
   quizConfig.value = { chapters: 1, quizzes: 5 }
   iaResult.value = null
 }
@@ -103,11 +121,18 @@ async function generateIAContent() {
   // Appel backend pour générer le contenu IA
   const formData = new FormData()
   formData.append('ebook', file.value)
-  // On peut ajouter d'autres infos si besoin
+  formData.append('quizConfig', JSON.stringify(quizConfig.value))
+  formData.append('infos', JSON.stringify(infos.value))
+  
+  if (coverImage.value) {
+    formData.append('coverImage', coverImage.value)
+  }
+  
   const response = await fetch('http://localhost:3000/api/analyze-ebook', {
     method: 'POST',
     body: formData
   })
+  
   if (!response.ok) throw new Error('Erreur backend')
   const data = await response.json()
   if (data.error) throw new Error(data.error)

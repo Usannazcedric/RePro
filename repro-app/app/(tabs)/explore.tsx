@@ -1,7 +1,9 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useRouter } from 'expo-router';
+import BagIcon from '../../components/BagIcon';
+import { getFontFamily } from '../../constants/Fonts';
 const Formations = [
   {
     theme: 'Code',
@@ -30,10 +32,21 @@ const Formations = [
 ];
 
 export default function TabTwoScreen() {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.header}>Mes Formations</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.header}>Mes Formations</Text>
+          <TouchableOpacity 
+            style={styles.boutiqueButton}
+            onPress={() => router.push('/boutique')}
+          >
+            <BagIcon width={16} height={18} color="#7376FF" />
+            <Text style={styles.boutiqueText}>Boutique</Text>
+          </TouchableOpacity>
+        </View>
 
         {Formations.map((formation, index) => (
           <View key={index} style={[styles.card, { borderLeftColor: formation.color }]}>
@@ -61,11 +74,36 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   header: {
     fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 24,
     color: '#1f2937',
+    fontFamily: getFontFamily('bold'),
+  },
+  boutiqueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  boutiqueText: {
+    color: '#7376FF',
+    fontWeight: '600',
+    fontSize: 16,
+    fontFamily: getFontFamily('semiBold'),
   },
   card: {
     backgroundColor: 'white',
@@ -82,19 +120,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
+    fontFamily: getFontFamily('semiBold'),
   },
   status: {
     fontSize: 12,
     color: '#888',
     marginBottom: 6,
+    fontFamily: getFontFamily('regular'),
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
+    fontFamily: getFontFamily('bold'),
   },
   details: {
     fontSize: 13,
     color: '#444',
+    fontFamily: getFontFamily('regular'),
   },
 });

@@ -35,6 +35,18 @@ const router = createRouter({
       component: () => import('../views/FormationsView.vue'),
     },
     {
+      path: '/formations/edit/:id',
+      name: 'edit-formation',
+      component: () => import('../views/EditFormationView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/formations/wizard',
+      name: 'add-formation',
+      component: () => import('../views/AjouterFormationWizard.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/profile',
       component: ProfileView,
       children: [
