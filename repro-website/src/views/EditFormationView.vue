@@ -61,53 +61,137 @@
           </div>
         </div>
 
-        <!-- Résumé -->
-        <div class="section">
-          <h2>Résumé du cours</h2>
-          <div class="form-group">
-            <textarea v-model="formation.summary" class="input textarea" rows="4"></textarea>
-          </div>
-        </div>
-
-        <!-- Quiz -->
-        <div class="section">
-          <h2>Quiz</h2>
-          <div v-for="(quiz, index) in formation.quizzes" :key="index" class="quiz-item">
-            <div class="quiz-header">
-              <h3>Question {{ index + 1 }}</h3>
-              <button @click="removeQuiz(index)" class="remove-quiz-btn">🗑️</button>
+        <!-- Contenu de la formation -->
+        <div v-if="hasChapters" class="section">
+          <h2>📚 Chapitres de la formation</h2>
+          
+          <div v-for="(chapter, chapterIndex) in formation.chapters" :key="chapter.id" class="chapter-item">
+            <div class="chapter-header">
+              <h3>Chapitre {{ chapter.id }}: {{ chapter.title }}</h3>
+              <button @click="removeChapter(chapterIndex)" class="remove-btn" v-if="formation.chapters.length > 1">🗑️</button>
             </div>
             
             <div class="form-group">
-              <label>Question</label>
-              <input v-model="quiz.question" class="input" />
+              <label>Titre du chapitre</label>
+              <input v-model="chapter.title" class="input" />
             </div>
             
-            <div class="options-grid">
-              <div v-for="(option, letter) in quiz.options" :key="letter" class="option-group">
-                <label>Option {{ letter }}</label>
-                <input v-model="quiz.options[letter]" class="input" />
-                <label class="radio-label">
-                  <input 
-                    type="radio" 
-                    :name="`correct-${index}`" 
-                    :value="letter" 
-                    v-model="quiz.correctAnswer"
-                  />
-                  Bonne réponse
-                </label>
+            <!-- Cours du chapitre -->
+            <div class="courses-section">
+              <h4>📖 Cours</h4>
+              <div v-for="(course, courseIndex) in chapter.courses" :key="course.id" class="course-item">
+                <div class="course-header">
+                  <span>Cours {{ course.id }}</span>
+                  <button @click="removeCourse(chapterIndex, courseIndex)" class="remove-btn" v-if="chapter.courses.length > 1">🗑️</button>
+                </div>
+                
+                <div class="form-group">
+                  <label>Titre du cours</label>
+                  <input v-model="course.title" class="input" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Durée</label>
+                  <input v-model="course.duration" class="input" placeholder="ex: 15 minutes" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Contenu</label>
+                  <textarea v-model="course.content" class="input textarea" rows="3"></textarea>
+                </div>
               </div>
+              
+              <button @click="addCourse(chapterIndex)" class="add-btn">+ Ajouter un cours</button>
+            </div>
+            
+            <!-- Quiz du chapitre -->
+            <div class="quizzes-section">
+              <h4>🎯 Quiz</h4>
+              <div v-for="(quiz, quizIndex) in chapter.quizzes" :key="quiz.id" class="quiz-item">
+                <div class="quiz-header">
+                  <span>Quiz {{ quiz.id }}</span>
+                  <button @click="removeChapterQuiz(chapterIndex, quizIndex)" class="remove-btn" v-if="chapter.quizzes.length > 1">🗑️</button>
+                </div>
+                
+                <div class="form-group">
+                  <label>Question</label>
+                  <input v-model="quiz.question" class="input" />
+                </div>
+                
+                <div class="options-grid">
+                  <div v-for="(option, letter) in quiz.options" :key="letter" class="option-group">
+                    <label>Option {{ letter }}</label>
+                    <input v-model="quiz.options[letter]" class="input" />
+                    <label class="radio-label">
+                      <input 
+                        type="radio" 
+                        :name="`correct-${chapterIndex}-${quizIndex}`" 
+                        :value="letter" 
+                        v-model="quiz.correctAnswer"
+                      />
+                      Bonne réponse
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <button @click="addChapterQuiz(chapterIndex)" class="add-btn">+ Ajouter un quiz</button>
             </div>
           </div>
           
-          <button @click="addQuiz" class="add-quiz-btn">+ Ajouter un quiz</button>
+          <button @click="addChapter" class="add-chapter-btn">+ Ajouter un chapitre</button>
         </div>
+        
+        <!-- Ancien format (fallback) -->
+        <div v-else>
+          <!-- Résumé -->
+          <div class="section">
+            <h2>Résumé du cours</h2>
+            <div class="form-group">
+              <textarea v-model="formation.summary" class="input textarea" rows="4"></textarea>
+            </div>
+          </div>
 
-        <!-- Tips -->
-        <div class="section">
-          <h2>Conseils et astuces</h2>
-          <div class="form-group">
-            <textarea v-model="formation.tips" class="input textarea" rows="3"></textarea>
+          <!-- Quiz -->
+          <div class="section">
+            <h2>Quiz</h2>
+            <div v-for="(quiz, index) in formation.quizzes" :key="index" class="quiz-item">
+              <div class="quiz-header">
+                <h3>Question {{ index + 1 }}</h3>
+                <button @click="removeQuiz(index)" class="remove-quiz-btn">🗑️</button>
+              </div>
+              
+              <div class="form-group">
+                <label>Question</label>
+                <input v-model="quiz.question" class="input" />
+              </div>
+              
+              <div class="options-grid">
+                <div v-for="(option, letter) in quiz.options" :key="letter" class="option-group">
+                  <label>Option {{ letter }}</label>
+                  <input v-model="quiz.options[letter]" class="input" />
+                  <label class="radio-label">
+                    <input 
+                      type="radio" 
+                      :name="`correct-${index}`" 
+                      :value="letter" 
+                      v-model="quiz.correctAnswer"
+                    />
+                    Bonne réponse
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <button @click="addQuiz" class="add-quiz-btn">+ Ajouter un quiz</button>
+          </div>
+
+          <!-- Tips -->
+          <div class="section">
+            <h2>Conseils et astuces</h2>
+            <div class="form-group">
+              <textarea v-model="formation.tips" class="input textarea" rows="3"></textarea>
+            </div>
           </div>
         </div>
 
@@ -128,7 +212,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 
@@ -141,6 +225,11 @@ const saving = ref(false)
 const coverPreview = ref('')
 const coverInput = ref(null)
 const newCoverFile = ref(null)
+
+// Computed pour détecter le format
+const hasChapters = computed(() => {
+  return formation.value?.chapters && formation.value.chapters.length > 0
+})
 
 onMounted(async () => {
   await loadFormation()
@@ -158,16 +247,23 @@ async function loadFormation() {
 
     if (error) throw error
 
+    // Détecter le format de la formation
+    const hasChapters = data.formation_data?.chapters && data.formation_data.chapters.length > 0
+    
     formation.value = {
       id: data.id,
       title: data.title,
       theme: data.theme,
       description: data.description,
+      // Nouveau format avec chapitres
+      chapters: hasChapters ? data.formation_data.chapters : [],
+      // Ancien format (fallback)
       summary: data.summary,
       quizzes: data.quizzes || [],
       tips: data.tips,
       is_state_recognized: data.is_state_recognized,
-      is_creator_certified: data.is_creator_certified
+      is_creator_certified: data.is_creator_certified,
+      formation_data: data.formation_data || {}
     }
 
     // Charger la photo de couverture si elle existe
@@ -227,18 +323,119 @@ function removeQuiz(index) {
   }
 }
 
+// Fonctions pour gérer les chapitres
+function addChapter() {
+  const newChapterId = formation.value.chapters.length + 1
+  formation.value.chapters.push({
+    id: newChapterId,
+    title: `Nouveau chapitre ${newChapterId}`,
+    courses: [{
+      id: 1,
+      title: 'Nouveau cours',
+      duration: '15 minutes',
+      content: 'Contenu du cours...'
+    }],
+    quizzes: [{
+      id: 1,
+      question: 'Nouvelle question',
+      options: {
+        A: 'Option A',
+        B: 'Option B',
+        C: 'Option C',
+        D: 'Option D'
+      },
+      correctAnswer: 'A'
+    }]
+  })
+}
+
+function removeChapter(chapterIndex) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer ce chapitre ?')) {
+    formation.value.chapters.splice(chapterIndex, 1)
+    // Réorganiser les IDs des chapitres
+    formation.value.chapters.forEach((chapter, index) => {
+      chapter.id = index + 1
+    })
+  }
+}
+
+function addCourse(chapterIndex) {
+  const chapter = formation.value.chapters[chapterIndex]
+  const newCourseId = chapter.courses.length + 1
+  chapter.courses.push({
+    id: newCourseId,
+    title: `Nouveau cours ${newCourseId}`,
+    duration: '15 minutes',
+    content: 'Contenu du cours...'
+  })
+}
+
+function removeCourse(chapterIndex, courseIndex) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer ce cours ?')) {
+    const chapter = formation.value.chapters[chapterIndex]
+    chapter.courses.splice(courseIndex, 1)
+    // Réorganiser les IDs des cours
+    chapter.courses.forEach((course, index) => {
+      course.id = index + 1
+    })
+  }
+}
+
+function addChapterQuiz(chapterIndex) {
+  const chapter = formation.value.chapters[chapterIndex]
+  const newQuizId = chapter.quizzes.length + 1
+  chapter.quizzes.push({
+    id: newQuizId,
+    question: 'Nouvelle question',
+    options: {
+      A: 'Option A',
+      B: 'Option B',
+      C: 'Option C',
+      D: 'Option D'
+    },
+    correctAnswer: 'A'
+  })
+}
+
+function removeChapterQuiz(chapterIndex, quizIndex) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')) {
+    const chapter = formation.value.chapters[chapterIndex]
+    chapter.quizzes.splice(quizIndex, 1)
+    // Réorganiser les IDs des quiz
+    chapter.quizzes.forEach((quiz, index) => {
+      quiz.id = index + 1
+    })
+  }
+}
+
 async function saveChanges() {
   saving.value = true
   
   try {
-    const updateData = {
+    let updateData = {
       title: formation.value.title,
       theme: formation.value.theme,
-      description: formation.value.description,
-      summary: formation.value.summary,
-      quizzes: formation.value.quizzes,
-      tips: formation.value.tips,
-      formation_data: {
+      description: formation.value.description
+    }
+
+    if (hasChapters.value) {
+      // Nouveau format avec chapitres
+      updateData.formation_data = {
+        ...formation.value.formation_data,
+        chapters: formation.value.chapters,
+        coverImageUrl: coverPreview.value,
+        updatedAt: new Date().toISOString()
+      }
+      // Nettoyer les anciennes colonnes si elles existent
+      updateData.summary = null
+      updateData.quizzes = null
+      updateData.tips = null
+    } else {
+      // Ancien format
+      updateData.summary = formation.value.summary
+      updateData.quizzes = formation.value.quizzes
+      updateData.tips = formation.value.tips
+      updateData.formation_data = {
         ...formation.value.formation_data,
         coverImageUrl: coverPreview.value,
         updatedAt: new Date().toISOString()
@@ -501,6 +698,108 @@ function goBack() {
   cursor: pointer;
 }
 
+/* Styles pour les chapitres */
+.chapter-item {
+  background: #ffffff;
+  border: 2px solid #7376FF;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chapter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chapter-header h3 {
+  margin: 0;
+  color: #7376FF;
+  font-size: 1.25rem;
+}
+
+.courses-section, .quizzes-section {
+  margin-top: 1.5rem;
+}
+
+.courses-section h4, .quizzes-section h4 {
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.course-item {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.add-btn {
+  background: #7376FF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.add-btn:hover {
+  background: #5d60d6;
+}
+
+.add-chapter-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2rem;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+
+.add-chapter-btn:hover {
+  background: #059669;
+}
+
+.chapter-item .remove-btn {
+  position: static;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chapter-item .remove-btn:hover {
+  background: #dc2626;
+}
+
 @media (max-width: 768px) {
   .options-grid {
     grid-template-columns: 1fr;
@@ -516,6 +815,22 @@ function goBack() {
   
   .edit-formation {
     padding: 1rem 0.5rem;
+  }
+  
+  .chapter-item {
+    padding: 1rem;
+  }
+  
+  .chapter-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .course-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 </style> 

@@ -68,7 +68,7 @@ app.post('/api/analyze-ebook', upload.fields([
     console.log('✅ Réponse reçue de LM Studio');
     
     console.log('🔍 Parsing de la réponse...');
-    const { summary, quizzes, tips } = parseAIResponse(aiResponse);
+    const { chapters } = parseAIResponse(aiResponse);
     console.log('✅ Parsing réussi');
 
     // Nettoyage des fichiers temporaires
@@ -80,9 +80,7 @@ app.post('/api/analyze-ebook', upload.fields([
     }
 
     res.json({ 
-      summary: summary,
-      quizzes: quizzes,
-      tips: tips,
+      chapters: chapters,
       receivedConfig: quizConfig,
       receivedInfos: infos
     });
@@ -113,50 +111,113 @@ app.listen(port, async () => {
   }
 });
 
-function buildPrompt(text, quizConfig = { chapters: 1, quizzes: 5 }, infos = {}) {
-  const quizTemplate = Array.from({ length: quizConfig.quizzes }, (_, i) => `    {
-      "question": "Question ${i + 1}",
-      "options": {
-        "A": "Réponse A",
-        "B": "Réponse B",
-        "C": "Réponse C",
-        "D": "Réponse D"
-      },
-      "correctAnswer": "A"
-    }`).join(',\n');
-
+function buildPrompt(text, quizConfig = { chapters: 3, quizzes: 5 }, infos = {}) {
   return `
-Tu es une IA éducative spécialisée dans la création de contenus pédagogiques en français.
+Tu es une IA éducative française. Tu dois OBLIGATOIREMENT générer une structure de formation avec 3 chapitres EN FRANÇAIS.
 
-Informations sur la formation :
-- Titre : ${infos.title || 'Non spécifié'}
-- Thème : ${infos.theme || 'Non spécifié'}
-- Nombre de chapitres souhaités : ${quizConfig.chapters}
-- Nombre de quiz souhaités : ${quizConfig.quizzes}
+TRÈS IMPORTANT: 
+- Réponds UNIQUEMENT en FRANÇAIS
+- Tout le contenu doit être en FRANÇAIS (titres, descriptions, questions, options)
+- Tu dois répondre UNIQUEMENT avec le JSON suivant, rien d'autre
 
-Voici un extrait de cours à analyser :
-
+Analyse ce contenu de cours:
 """
 ${text}
 """
 
-Génère une réponse structurée avec le format JSON suivant (EXACTEMENT ${quizConfig.quizzes} questions) :
+Génère EXACTEMENT cette structure JSON (remplace les [...] par du contenu adapté au document EN FRANÇAIS):
 
 {
-  "summary": "Le résumé du cours en 2-3 phrases",
-  "quizzes": [
-${quizTemplate}
-  ],
-  "tips": "Une astuce ou point clé à retenir"
+  "chapters": [
+    {
+      "id": 1,
+      "title": "[Titre du chapitre 1 basé sur le contenu - EN FRANÇAIS]",
+      "courses": [
+        {
+          "id": 1,
+          "title": "[Titre du cours basé sur le contenu - EN FRANÇAIS]",
+          "duration": "4:30",
+          "content": "[Description détaillée du cours en 2-3 phrases basée sur le contenu du PDF - EN FRANÇAIS]"
+        }
+      ],
+      "quizzes": [
+        {
+          "id": 1,
+          "title": "Test - Chapitre 1",
+          "question": "[Question basée sur le contenu du chapitre - EN FRANÇAIS]",
+          "options": {
+            "A": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "B": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "C": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "D": "[Option basée sur le contenu - EN FRANÇAIS]"
+          },
+          "correctAnswer": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "[Titre du chapitre 2 basé sur le contenu - EN FRANÇAIS]",
+      "courses": [
+        {
+          "id": 2,
+          "title": "[Titre du cours basé sur le contenu - EN FRANÇAIS]",
+          "duration": "5:15",
+          "content": "[Description détaillée du cours en 2-3 phrases basée sur le contenu du PDF - EN FRANÇAIS]"
+        }
+      ],
+      "quizzes": [
+        {
+          "id": 2,
+          "title": "Test - Chapitre 2",
+          "question": "[Question basée sur le contenu du chapitre - EN FRANÇAIS]",
+          "options": {
+            "A": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "B": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "C": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "D": "[Option basée sur le contenu - EN FRANÇAIS]"
+          },
+          "correctAnswer": "B"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "[Titre du chapitre 3 basé sur le contenu - EN FRANÇAIS]",
+      "courses": [
+        {
+          "id": 3,
+          "title": "[Titre du cours basé sur le contenu - EN FRANÇAIS]",
+          "duration": "6:00",
+          "content": "[Description détaillée du cours en 2-3 phrases basée sur le contenu du PDF - EN FRANÇAIS]"
+        }
+      ],
+      "quizzes": [
+        {
+          "id": 3,
+          "title": "Test - Chapitre 3",
+          "question": "[Question basée sur le contenu du chapitre - EN FRANÇAIS]",
+          "options": {
+            "A": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "B": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "C": "[Option basée sur le contenu - EN FRANÇAIS]",
+            "D": "[Option basée sur le contenu - EN FRANÇAIS]"
+          },
+          "correctAnswer": "C"
+        }
+      ]
+    }
+  ]
 }
 
-RÈGLES IMPORTANTES:
-1. Le résumé doit être clair et bien structuré
-2. Crée EXACTEMENT ${quizConfig.quizzes} questions de quiz (pas plus, pas moins)
-3. L'astuce doit être concise et pertinente
-4. Respecte STRICTEMENT le format JSON
-5. Assure-toi que le JSON est valide (pas de virgules en trop, guillemets correctement fermés)
-6. NE RÉPONDS QU'AVEC LE JSON, aucun texte avant ou après
+RÈGLES STRICTES:
+- Réponds UNIQUEMENT avec ce JSON
+- Remplace tous les [...] par du contenu réel EN FRANÇAIS
+- 3 chapitres OBLIGATOIRES
+- Minimum 1 cours et 1 quiz par chapitre
+- Tu peux ajouter plus de cours/quiz si tu veux
+- Durées entre 3:00 et 8:00
+- TOUT LE CONTENU DOIT ÊTRE EN FRANÇAIS
 `;
 }
 
@@ -178,57 +239,172 @@ function parseAIResponse(response) {
         content = content.substring(firstBrace);
       }
       
-      // Supprime tout texte après le dernier }
+      // Gestion spéciale pour JSON coupé - essayer de le compléter
+      let cleanContent = content;
       const lastBrace = content.lastIndexOf('}');
-      if (lastBrace !== -1 && lastBrace < content.length - 1) {
-        content = content.substring(0, lastBrace + 1);
+      
+      // Si le JSON semble coupé, essayer de le réparer
+      if (lastBrace === -1 || !content.trim().endsWith('}')) {
+        console.log('🔧 JSON semble coupé, tentative de réparation...');
+        
+        // Chercher le dernier chapitre complet
+        const chaptersMatch = content.match(/"chapters":\s*\[(.*)/s);
+        if (chaptersMatch) {
+          const chaptersContent = chaptersMatch[1];
+          
+          // Compter les accolades ouvertes vs fermées pour voir où on en est
+          let openBraces = 0;
+          let lastCompleteChapter = 0;
+          
+          for (let i = 0; i < chaptersContent.length; i++) {
+            if (chaptersContent[i] === '{') openBraces++;
+            if (chaptersContent[i] === '}') {
+              openBraces--;
+              if (openBraces === 0) {
+                lastCompleteChapter = i;
+              }
+            }
+          }
+          
+          if (lastCompleteChapter > 0) {
+            // Reconstruit le JSON avec les chapitres complets
+            const validChapters = chaptersContent.substring(0, lastCompleteChapter + 1);
+            cleanContent = `{"chapters":[${validChapters}]}`;
+            console.log('🔧 JSON réparé:', cleanContent);
+          }
+        }
+      } else {
+        // Supprime tout texte après le dernier }
+        if (lastBrace !== -1 && lastBrace < content.length - 1) {
+          cleanContent = content.substring(0, lastBrace + 1);
+        }
       }
       
-      console.log('🧹 JSON nettoyé:', content);
+      console.log('🧹 JSON nettoyé:', cleanContent);
       
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(cleanContent);
       console.log('✅ Parsing JSON réussi');
       
       // Validation des données
-      if (!parsed.summary || !parsed.quizzes || !Array.isArray(parsed.quizzes) || !parsed.tips) {
-        throw new Error('Structure JSON invalide - champs manquants');
+      if (!parsed.chapters || !Array.isArray(parsed.chapters)) {
+        throw new Error('Structure JSON invalide - chapitres manquants');
       }
       
-      // Validation du nombre de quiz
-      if (parsed.quizzes.length === 0) {
-        throw new Error('Aucun quiz généré');
+      console.log(`📊 ${parsed.chapters.length} chapitres trouvés`);
+      
+      // Si on a moins de 3 chapitres mais au moins 1, on garde ce qu'on a
+      if (parsed.chapters.length === 0) {
+        throw new Error('Aucun chapitre trouvé');
       }
       
-      console.log(`✅ ${parsed.quizzes.length} quiz générés`);
+      // Validation de chaque chapitre
+      parsed.chapters.forEach((chapter, index) => {
+        if (!chapter.title || !chapter.courses || !chapter.quizzes) {
+          throw new Error(`Chapitre ${index + 1} invalide - champs manquants`);
+        }
+        if (!Array.isArray(chapter.courses) || !Array.isArray(chapter.quizzes)) {
+          throw new Error(`Chapitre ${index + 1} invalide - cours ou quiz ne sont pas des tableaux`);
+        }
+        if (chapter.courses.length === 0 || chapter.quizzes.length === 0) {
+          throw new Error(`Chapitre ${index + 1} invalide - doit avoir au moins 1 cours et 1 quiz`);
+        }
+      });
+      
+      console.log(`✅ ${parsed.chapters.length} chapitres validés avec succès`);
       
       return {
-        summary: parsed.summary,
-        quizzes: parsed.quizzes,
-        tips: parsed.tips
+        chapters: parsed.chapters
       };
     }
 
     throw new Error('Format de réponse invalide de LM Studio');
   } catch (error) {
     console.error('❌ Erreur parsing réponse IA:', error);
+    console.error('📄 Contenu qui a causé l\'erreur:', response?.choices?.[0]?.message?.content?.substring(0, 500));
     
-    // En cas d'erreur, retourner une réponse par défaut
-    console.log('🔧 Génération d\'une réponse par défaut...');
+    // En cas d'erreur, retourner une réponse par défaut basée sur Elevator Pitch
+    console.log('🔧 Génération d\'une réponse par défaut basée sur Elevator Pitch...');
     return {
-      summary: "Résumé du cours non disponible en raison d'une erreur de parsing.",
-      quizzes: [
+      chapters: [
         {
-          question: "Question par défaut - Quel est le sujet principal de ce cours ?",
-          options: {
-            A: "Option A",
-            B: "Option B", 
-            C: "Option C",
-            D: "Option D"
-          },
-          correctAnswer: "A"
+          id: 1,
+          title: "Introduction à l'elevator pitch",
+          courses: [
+            {
+              id: 1,
+              title: "Concept et importance de l'elevator pitch",
+              duration: "4:30",
+              content: "L'elevator pitch est un pitch court et convaincant qui résume une idée, un projet ou un produit en quelques minutes. Découvrez son importance dans le monde des affaires."
+            }
+          ],
+          quizzes: [
+            {
+              id: 1,
+              title: "Test - Chapitre 1",
+              question: "Qu'est-ce que l'elevator pitch ?",
+              options: {
+                A: "Un discours long et complexe",
+                B: "Une courte présentation convaincante",
+                C: "Une réunion en elevator",
+                D: "Un type de pitch business"
+              },
+              correctAnswer: "B"
+            }
+          ]
+        },
+        {
+          id: 2,
+          title: "Les composants clés",
+          courses: [
+            {
+              id: 2,
+              title: "Composantes clés d'un elevator pitch",
+              duration: "5:15",
+              content: "Dans cette section, nous examinerons les différentes composantes clés d'un elevator pitch, telles que la concision, la clarté, la crédibilité et la conceptualisation."
+            }
+          ],
+          quizzes: [
+            {
+              id: 2,
+              title: "Test - Chapitre 2",
+              question: "Quelles sont les composantes clés d'un elevator pitch ?",
+              options: {
+                A: "Concis, Clair, Convaincant et Conceptuel",
+                B: "Long, Confus, Pas convaincant et Non conceptuel",
+                C: "Concis, Non clair, Non convaincant et Non conceptuel",
+                D: "Concis, Clair, Convaincant, Conceptuel et Concret"
+              },
+              correctAnswer: "A"
+            }
+          ]
+        },
+        {
+          id: 3,
+          title: "La structure",
+          courses: [
+            {
+              id: 3,
+              title: "Structure d'un elevator pitch",
+              duration: "6:00",
+              content: "Dans cette section, nous examinerons la structure typique d'un elevator pitch, telle que décrite par Chris O'Leary. Nous explorerons également d'autres structures de pitch."
+            }
+          ],
+          quizzes: [
+            {
+              id: 3,
+              title: "Test - Chapitre 3",
+              question: "Quelle est la structure typique d'un elevator pitch ?",
+              options: {
+                A: "Introduction, développement, conclusion",
+                B: "Présentation, argumentation, appel à l'action",
+                C: "Problème, solution, bénéfices",
+                D: "Qui, quoi, pourquoi, comment"
+              },
+              correctAnswer: "C"
+            }
+          ]
         }
-      ],
-      tips: "Astuce : Consultez le contenu original pour plus de détails."
+      ]
     };
   }
 }
@@ -239,7 +415,7 @@ async function callLMStudio(prompt) {
     const response = await axios.post(`${LM_STUDIO_URL}/v1/chat/completions`, {
       model: "local-model",
       messages: [
-        { role: "system", content: "Tu es un assistant pédagogique qui répond uniquement en JSON valide." },
+        { role: "system", content: "Tu es un assistant pédagogique français qui répond uniquement en JSON valide EN FRANÇAIS. Tout le contenu que tu génères doit être en français." },
         { role: "user", content: prompt }
       ],
       temperature: 0.7,

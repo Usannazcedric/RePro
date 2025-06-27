@@ -167,6 +167,16 @@ BEGIN
         ALTER TABLE formations ADD COLUMN chapter_count INTEGER DEFAULT 1;
     END IF;
 
+    -- Ajouter la colonne chapters (structure complète des chapitres)
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'formations' 
+        AND column_name = 'chapters'
+    ) THEN
+        ALTER TABLE formations ADD COLUMN chapters JSONB;
+    END IF;
+
     -- Mettre à jour les formations existantes
     UPDATE formations SET 
         certificate_available = COALESCE(certificate_available, true),

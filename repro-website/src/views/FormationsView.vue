@@ -20,12 +20,13 @@
               <div class="text-sm text-gray-500 mb-1">Thème : {{ formation.theme }}</div>
               <div class="text-sm text-gray-500 mb-1">Publié le : {{ formatDate(formation.created_at) }}</div>
               <div class="text-gray-600 mb-2">{{ formation.description }}</div>
-              <div class="text-xs text-gray-400 mb-3">{{ formation.summary?.substring(0, 100) }}...</div>
+              <div class="text-xs text-gray-400 mb-3">{{ getFormationPreview(formation) }}</div>
               
               <!-- Statistiques -->
               <div class="stats mb-3 flex gap-4 text-sm text-gray-500">
-                <span>📝 {{ formation.quizzes?.length || 0 }} quiz</span>
-                <span v-if="formation.is_state_recognized" class="text-green-600">✅ Certifié</span>
+                <span>📚 {{ getChapterCount(formation) }} chapitre{{ getChapterCount(formation) > 1 ? 's' : '' }}</span>
+                <span>📝 {{ getQuizCount(formation) }} quiz</span>
+                <span v-if="formation.formation_data?.infos?.is_state_recognized" class="text-green-600">✅ Certifié</span>
               </div>
               
               <!-- Actions -->
@@ -64,30 +65,78 @@
             <div class="formation-info mb-4">
               <p><strong>Thème:</strong> {{ selectedFormation?.theme }}</p>
               <p><strong>Description:</strong> {{ selectedFormation?.description }}</p>
+              <p><strong>Chapitres:</strong> {{ getChapterCount(selectedFormation) }}</p>
+              <p><strong>Quiz total:</strong> {{ getQuizCount(selectedFormation) }}</p>
             </div>
             
-            <div v-if="selectedFormation?.summary" class="summary mb-4">
-              <h3 class="font-bold mb-2">📄 Résumé</h3>
-              <p class="text-gray-700">{{ selectedFormation.summary }}</p>
-            </div>
-            
-            <div v-if="selectedFormation?.quizzes?.length" class="quizzes mb-4">
-              <h3 class="font-bold mb-2">🎯 Quiz ({{ selectedFormation.quizzes.length }})</h3>
-              <div v-for="(quiz, index) in selectedFormation.quizzes" :key="index" class="quiz-preview mb-3">
-                <p class="font-medium">{{ index + 1 }}. {{ quiz.question }}</p>
-                <ul class="ml-4 text-sm text-gray-600">
-                  <li v-for="(option, letter) in quiz.options" :key="letter" 
-                      :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }">
-                    {{ letter }}. {{ option }}
-                    <span v-if="letter === quiz.correctAnswer"> ✅</span>
-                  </li>
-                </ul>
+            <!-- Nouveau format avec chapitres -->
+            <div v-if="hasChapters(selectedFormation)" class="chapters-content">
+              <h3 class="font-bold mb-4 text-lg">📚 Contenu de la formation</h3>
+              
+              <div v-for="chapter in getChapters(selectedFormation)" :key="chapter.id" class="chapter-section mb-6">
+                <h4 class="font-semibold text-lg mb-3 text-purple-600">
+                  Chapitre {{ chapter.id }}: {{ chapter.title }}
+                </h4>
+                
+                <!-- Cours du chapitre -->
+                <div v-if="chapter.courses?.length" class="courses-section mb-4">
+                  <h5 class="font-medium mb-2 text-gray-700">📖 Cours ({{ chapter.courses.length }})</h5>
+                  <div v-for="course in chapter.courses" :key="course.id" class="course-item mb-2">
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <span class="course-number">{{ course.id }}</span>
+                      <div class="flex-1">
+                        <p class="font-medium text-gray-800">{{ course.title }}</p>
+                        <p class="text-sm text-gray-500 mb-1">Durée: {{ course.duration }}</p>
+                        <p class="text-sm text-gray-600">{{ course.content }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Quiz du chapitre -->
+                <div v-if="chapter.quizzes?.length" class="quizzes-section mb-4">
+                  <h5 class="font-medium mb-2 text-gray-700">🎯 Quiz ({{ chapter.quizzes.length }})</h5>
+                  <div v-for="quiz in chapter.quizzes" :key="quiz.id" class="quiz-item mb-3">
+                    <div class="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+                      <p class="font-medium text-gray-800 mb-2">{{ quiz.question }}</p>
+                      <ul class="ml-4 text-sm text-gray-600">
+                        <li v-for="(option, letter) in quiz.options" :key="letter" 
+                            :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }">
+                          {{ letter }}. {{ option }}
+                          <span v-if="letter === quiz.correctAnswer"> ✅</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div v-if="selectedFormation?.tips" class="tips">
-              <h3 class="font-bold mb-2">💡 Conseils</h3>
-              <p class="text-gray-700">{{ selectedFormation.tips }}</p>
+            <!-- Ancien format de fallback -->
+            <div v-else>
+              <div v-if="selectedFormation?.summary" class="summary mb-4">
+                <h3 class="font-bold mb-2">📄 Résumé</h3>
+                <p class="text-gray-700">{{ selectedFormation.summary }}</p>
+              </div>
+              
+              <div v-if="selectedFormation?.quizzes?.length" class="quizzes mb-4">
+                <h3 class="font-bold mb-2">🎯 Quiz ({{ selectedFormation.quizzes.length }})</h3>
+                <div v-for="(quiz, index) in selectedFormation.quizzes" :key="index" class="quiz-preview mb-3">
+                  <p class="font-medium">{{ index + 1 }}. {{ quiz.question }}</p>
+                  <ul class="ml-4 text-sm text-gray-600">
+                    <li v-for="(option, letter) in quiz.options" :key="letter" 
+                        :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }">
+                      {{ letter }}. {{ option }}
+                      <span v-if="letter === quiz.correctAnswer"> ✅</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div v-if="selectedFormation?.tips" class="tips">
+                <h3 class="font-bold mb-2">💡 Conseils</h3>
+                <p class="text-gray-700">{{ selectedFormation.tips }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -320,6 +369,59 @@
     showPreview.value = false
     selectedFormation.value = null
   }
+  
+  // Fonctions pour gérer le nouveau format avec chapitres
+  function hasChapters(formation) {
+    const chapters = getChapters(formation)
+    return chapters && chapters.length > 0
+  }
+  
+  function getChapters(formation) {
+    // Nouveau format: chapitres dans formation_data
+    if (formation?.formation_data?.chapters && formation.formation_data.chapters.length > 0) {
+      return formation.formation_data.chapters
+    }
+    
+    // Fallback: colonnes directes (si elles existent)
+    if (formation?.chapters && formation.chapters.length > 0) {
+      return formation.chapters
+    }
+    
+    return []
+  }
+  
+  function getChapterCount(formation) {
+    const chapters = getChapters(formation)
+    return chapters.length || 1
+  }
+  
+  function getQuizCount(formation) {
+    const chapters = getChapters(formation)
+    if (chapters.length > 0) {
+      // Compter tous les quiz dans tous les chapitres
+      return chapters.reduce((total, chapter) => {
+        return total + (chapter.quizzes?.length || 0)
+      }, 0)
+    }
+    
+    // Fallback ancien format
+    return formation?.quizzes?.length || 0
+  }
+  
+  function getFormationPreview(formation) {
+    const chapters = getChapters(formation)
+    if (chapters.length > 0 && chapters[0].courses?.length > 0) {
+      // Utiliser le premier cours du premier chapitre
+      return `${chapters[0].courses[0].content?.substring(0, 100) || 'Contenu non disponible'}...`
+    }
+    
+    // Fallback ancien format
+    if (formation?.summary) {
+      return `${formation.summary.substring(0, 100)}...`
+    }
+    
+    return 'Aperçu non disponible'
+  }
   </script>
   
   <style scoped>
@@ -501,6 +603,41 @@
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
+  }
+  
+  /* Styles pour le nouveau format avec chapitres */
+  .chapter-section {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: #fafafa;
+  }
+  
+  .course-number {
+    background: #7376FF;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  
+  .course-item .flex {
+    transition: all 0.2s ease;
+  }
+  
+  .course-item .flex:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .quiz-item .bg-yellow-50:hover {
+    background: #fef3c7;
   }
   </style>
   

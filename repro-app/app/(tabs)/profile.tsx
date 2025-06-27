@@ -147,7 +147,7 @@ export default function ProfileScreen() {
             {errorMessage.includes('confirmer votre email') && (
               <TouchableOpacity onPress={resendConfirmationEmail}>
                 <Text style={styles.resendButton}>
-                  Renvoyer l'email de confirmation
+                  Renvoyer l&apos;email de confirmation
                 </Text>
               </TouchableOpacity>
             )}

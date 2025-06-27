@@ -7,9 +7,6 @@
       @back="handleBack"
       @saved="handleSaved"
     />
-    <div class="wizard-progress">
-      <span v-for="(step, i) in steps" :key="i" :class="{active: i === currentStep}"></span>
-    </div>
   </div>
 </template>
 
@@ -20,6 +17,7 @@ import StepInfos from '../components/wizard/StepInfos.vue'
 import StepUpload from '../components/wizard/StepUpload.vue'
 import StepQuizSelect from '../components/wizard/StepQuizSelect.vue'
 import StepLoading from '../components/wizard/StepLoading.vue'
+import StepChaptersEdit from '../components/wizard/StepChaptersEdit.vue'
 import StepResult from '../components/wizard/StepResult.vue'
 
 const currentStep = ref(0)
@@ -29,8 +27,9 @@ const pdfUrl = ref('')
 const file = ref(null)
 const coverImage = ref(null)
 const coverImageUrl = ref('')
-const quizConfig = ref({ chapters: 1, quizzes: 5 })
+const quizConfig = ref({ chapters: 3, quizzes: 5 })
 const iaResult = ref(null)
+const chapters = ref([])
 
 const steps = [
   {
@@ -63,12 +62,19 @@ const steps = [
     })
   },
   {
+    component: StepChaptersEdit,
+    props: () => ({
+      chapters: chapters.value
+    })
+  },
+  {
     component: StepResult,
     props: () => ({
       infos: infos.value,
       pdfUrl: pdfUrl.value,
       coverImageUrl: coverImageUrl.value,
       quizConfig: quizConfig.value,
+      chapters: chapters.value,
       result: iaResult.value
     })
   }
@@ -95,7 +101,27 @@ function handleNext(payload) {
   } else if (currentStep.value === 4) {
     // IA loading step, handled by StepLoading
     // next is called with IA result
+    console.log('🤖 Résultat IA reçu:', payload)
     iaResult.value = payload
+    
+    // Vérifier si l'IA a renvoyé le nouveau format (chapters) ou l'ancien (summary/quizzes)
+    if (payload.chapters && Array.isArray(payload.chapters)) {
+      chapters.value = payload.chapters
+      console.log('✅ Nouveau format détecté - Chapitres extraits:', chapters.value)
+    } else if (payload.summary || payload.quizzes) {
+      console.log('⚠️ Ancien format détecté, conversion en chapitres...')
+      // Convertir l'ancien format en nouveau format
+      chapters.value = convertOldFormatToChapters(payload)
+      console.log('🔄 Chapitres convertis:', chapters.value)
+    } else {
+      console.log('❌ Format non reconnu, utilisation de chapitres par défaut')
+      chapters.value = []
+    }
+    currentStep.value++
+  } else if (currentStep.value === 5) {
+    // Chapters edit step
+    console.log('✏️ Chapitres modifiés reçus:', payload)
+    chapters.value = payload
     currentStep.value++
   }
 }
@@ -113,8 +139,9 @@ function handleSaved() {
   file.value = null
   coverImage.value = null
   coverImageUrl.value = ''
-  quizConfig.value = { chapters: 1, quizzes: 5 }
+  quizConfig.value = { chapters: 3, quizzes: 5 }
   iaResult.value = null
+  chapters.value = []
 }
 
 async function generateIAContent() {
@@ -138,29 +165,78 @@ async function generateIAContent() {
   if (data.error) throw new Error(data.error)
   return data
 }
+
+function convertOldFormatToChapters(oldData) {
+  console.log('🔄 Conversion de l\'ancien format:', oldData)
+  
+  // Diviser les quiz en 3 chapitres
+  const quizzes = oldData.quizzes || []
+  const quizzesPerChapter = Math.ceil(quizzes.length / 3)
+  
+  const chapterTitles = [
+    "Introduction au sujet",
+    "Développement des concepts", 
+    "Application pratique"
+  ]
+  
+  const courseTitles = [
+    ["Bases fondamentales", "Concepts essentiels"],
+    ["Méthodes avancées", "Techniques pratiques"],
+    ["Mise en application", "Synthèse finale"]
+  ]
+  
+  const chapters = []
+  
+  for (let i = 0; i < 3; i++) {
+    const startQuiz = i * quizzesPerChapter
+    const endQuiz = Math.min(startQuiz + quizzesPerChapter, quizzes.length)
+    const chapterQuizzes = quizzes.slice(startQuiz, endQuiz)
+    
+    // Si pas de quiz pour ce chapitre, en créer un par défaut
+    if (chapterQuizzes.length === 0) {
+      chapterQuizzes.push({
+        id: i + 1,
+        title: `Test - Chapitre ${i + 1}`,
+        question: "Question par défaut",
+        options: {
+          A: "Option A",
+          B: "Option B", 
+          C: "Option C",
+          D: "Option D"
+        },
+        correctAnswer: "A"
+      })
+    }
+    
+    // Créer plusieurs cours différents par chapitre
+    const courses = courseTitles[i].map((title, courseIndex) => ({
+      id: i * 10 + courseIndex + 1,
+      title: title,
+      duration: ["3:25", "4:25", "5:00"][courseIndex] || "4:00",
+      content: `Contenu du cours "${title}" - ${oldData.summary?.substring(0, 100) || "Description du cours"}`
+    }))
+    
+    chapters.push({
+      id: i + 1,
+      title: chapterTitles[i],
+      courses: courses,
+      quizzes: chapterQuizzes.map((quiz, index) => ({
+        ...quiz,
+        id: i + 1,
+        title: `Test - Chapitre ${i + 1}`
+      }))
+    })
+  }
+  
+  console.log('✅ Conversion terminée:', chapters)
+  return chapters
+}
 </script>
 
 <style scoped>
 .ajouter-formation-wizard {
-  max-width: 700px;
+  max-width: 1700px;
   margin: 0 auto;
   padding: 2rem 0;
-}
-.wizard-progress {
-  display: flex;
-  justify-content: center;
-  gap: 0.7rem;
-  margin-top: 2.5rem;
-}
-.wizard-progress span {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #444;
-  transition: background 0.2s;
-}
-.wizard-progress span.active {
-  background: #3b82f6;
 }
 </style> 
