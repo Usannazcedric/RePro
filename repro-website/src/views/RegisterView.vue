@@ -221,7 +221,7 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #FAFAFA;
+  background: #E9E9EE;
 }
 
 .register-wrapper {

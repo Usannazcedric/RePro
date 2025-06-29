@@ -12,9 +12,9 @@ export default function OnboardingScreen() {
     >
       <View style={styles.content}>
         <Text style={styles.logo}>Repro</Text>
-        <Text style={styles.title}>Apprenez tout,{'\n'}n’importe où</Text>
+        <Text style={styles.title}>Apprenez tout,{'\n'}n'importe où</Text>
 
-        <TouchableOpacity onPress={() => router.replace('/')} style={styles.button}>
+        <TouchableOpacity onPress={() => router.push('/auth/RegisterScreen')} style={styles.button}>
           <Text style={styles.buttonText}>Se lancer</Text>
         </TouchableOpacity>
       </View>

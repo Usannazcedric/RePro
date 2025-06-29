@@ -177,10 +177,21 @@ BEGIN
         ALTER TABLE formations ADD COLUMN chapters JSONB;
     END IF;
 
+    -- Ajouter la colonne is_published (statut de publication)
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'formations' 
+        AND column_name = 'is_published'
+    ) THEN
+        ALTER TABLE formations ADD COLUMN is_published BOOLEAN DEFAULT false;
+    END IF;
+
     -- Mettre à jour les formations existantes
     UPDATE formations SET 
         certificate_available = COALESCE(certificate_available, true),
         quiz_count = COALESCE(quiz_count, 0),
-        chapter_count = COALESCE(chapter_count, 1)
-    WHERE certificate_available IS NULL OR quiz_count IS NULL OR chapter_count IS NULL;
+        chapter_count = COALESCE(chapter_count, 1),
+        is_published = COALESCE(is_published, false)
+    WHERE certificate_available IS NULL OR quiz_count IS NULL OR chapter_count IS NULL OR is_published IS NULL;
 END $$; 

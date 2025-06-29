@@ -295,7 +295,7 @@ h2 {
   flex-direction: column;
   align-items: center;
   border-radius: 40px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 18px rgba(115, 118, 255, 0.15);
   border: 1px solid #e5e7eb;
 }
 
@@ -483,7 +483,7 @@ h2 {
   background-color: #ffffff;
   border-radius: 40px;
   color: #374151;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 18px rgba(115, 118, 255, 0.15);
   border: 1px solid #e5e7eb;
 }
 

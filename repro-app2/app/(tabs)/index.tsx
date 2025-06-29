@@ -44,7 +44,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity onPress={() => router.push('/profile')}>
             <Image
-              source={require('/Users/drikce/Desktop/SnapRead/repro-app/assets/images/pexels-photo-415829.jpeg')}
+              source={require('../../assets/images/pexels-photo-415829.jpeg')}
               style={styles.avatar}
             />
           </TouchableOpacity>

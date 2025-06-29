@@ -62,7 +62,6 @@ onMounted(async () => {
 <style scoped>
 .wizard-wrapper {
   min-height: 100vh;
-  background: #fafafa;
   display: flex;
   align-items: flex-start;
   justify-content: center;

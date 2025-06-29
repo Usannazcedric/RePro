@@ -72,7 +72,6 @@ onUnmounted(() => {
           <div v-else class="avatar avatar-default">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#7376FF"/><path d="M4 20c0-2.21 3.582-4 8-4s8 1.79 8 4" fill="#7376FF"/></svg>
           </div>
-          <span class="username">{{ userProfile.username || 'Profil' }}</span>
         </div>
       </div>
       <button class="burger" @click="toggleMenu">
@@ -91,10 +90,9 @@ onUnmounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900;700;400&display=swap');
 
 .main-navbar {
-  background: #fff;
+  background: transparent;
   width: 100vw;
   min-height: 70px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   position: fixed;
   left: 0;
   top: 0;
@@ -103,12 +101,13 @@ onUnmounted(() => {
 }
 .wrapper {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 2.2vh 4vw;
   max-width: 1600px;
   margin: 0 auto;
   box-sizing: border-box;
+  position: relative;
 }
 .logo-text {
   font-family: 'Nunito', sans-serif;
@@ -116,11 +115,17 @@ onUnmounted(() => {
   font-size: 2rem;
   color: #7376FF;
   letter-spacing: -1px;
+  position: absolute;
+  left: 4vw;
 }
 nav {
   display: flex;
   gap: 38px;
   align-items: center;
+  background: #fff;
+  padding: 12px 32px;
+  border-radius: 50px;
+  box-shadow: 0 4px 18px rgba(115, 118, 255, 0.15);
 }
 nav a {
   text-decoration: none;
@@ -158,6 +163,8 @@ nav a:hover {
   display: flex;
   align-items: center;
   gap: 1.2rem;
+  position: absolute;
+  right: 4vw;
 }
 .login-btn {
   background: #7376FF;
@@ -203,12 +210,7 @@ nav a:hover {
   border-radius: 50%;
   border: 2px solid #7376FF;
 }
-.username {
-  font-family: 'Nunito', sans-serif;
-  font-weight: 700;
-  color: #7376FF;
-  font-size: 1.1rem;
-}
+
 .burger {
   display: none;
   flex-direction: column;
@@ -279,7 +281,7 @@ nav a:hover {
 
 <style>
 body {
-  background: #FAFAFA !important;
+  background: #E9E9EE !important;
   color: #222;
   font-family: 'Nunito', Arial, sans-serif;
 }

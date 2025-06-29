@@ -172,11 +172,12 @@ onMounted(async () => {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return
   user.value = session.user
-  // Charge les formations du user
+  // Charge les formations publiées du user
   const { data } = await supabase
     .from('formations')
     .select('*')
     .eq('user_id', user.value.id)
+    .eq('is_published', true) // Afficher seulement les formations publiées
     .order('created_at', { ascending: false })
   formations.value = data || []
   // Charge les posts existants
@@ -248,7 +249,6 @@ async function publishPost() {
   max-width: 1200px;
   margin: auto;
   padding: 2rem;
-  background: #f9f9fb;
 }
 
 .community-top-grid {
