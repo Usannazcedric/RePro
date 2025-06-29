@@ -4,7 +4,6 @@
       <button class="back-btn" @click="$emit('back')">&larr; Retour</button>
       <h2 class="title">La formation est en cours de création...</h2>
       
-      <!-- Icône PDF -->
       <div class="pdf-icon">
         <img src="/pdfff.svg" alt="PDF" />
       </div>
@@ -16,7 +15,6 @@
       </div>
       <div class="desc">Merci de patienter pendant que notre IA analyse votre document.</div>
       
-      <!-- Barre de progression du wizard -->
       <div class="progress-bar">
         <span class="step active"></span>
         <span class="step active"></span>
@@ -32,25 +30,23 @@
 import { ref, onMounted } from 'vue'
 const props = defineProps({
   pdfUrl: String,
-  onGenerate: Function // callback pour lancer l'appel IA
+  onGenerate: Function 
 })
 const emit = defineEmits(['next', 'back'])
 const progress = ref(0)
 
 onMounted(async () => {
-  // Progression visuelle beaucoup plus lente
   let interval = setInterval(() => {
     if (progress.value < 85) {
-      progress.value += Math.random() * 2 + 0.5 // Progression très lente et aléatoire
+      progress.value += Math.random() * 2 + 0.5 
     }
-  }, 800) // Intervalle plus long (800ms au lieu de 300ms)
+  }, 800)
   
-  // Appel backend pour générer le contenu IA
   try {
     const result = await props.onGenerate()
     progress.value = 100
     clearInterval(interval)
-    setTimeout(() => emit('next', result), 1500) // Attendre plus longtemps avant de passer à l'étape suivante
+    setTimeout(() => emit('next', result), 1500) 
   } catch (e) {
     clearInterval(interval)
     alert('Erreur lors de la génération IA')

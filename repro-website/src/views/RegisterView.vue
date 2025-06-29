@@ -15,8 +15,8 @@
           cours avec l'IA pour les rendre plus ludiques et interactifs !
         </h2>
         <div class="buttons">
-          <button class="outlined">En savoir plus</button>
-          <button class="filled">Nos abonnements</button>
+          <button class="outlined" @click="goToFAQ">En savoir plus</button>
+          <button class="filled" @click="goToPricing">Nos abonnements</button>
         </div>
       </div>
       <div class="right-section">
@@ -197,6 +197,22 @@ export default {
     redirectToLogin() {
       window.location.href = "/login";
     },
+    goToFAQ() {
+      this.$router.push('/faq');
+    },
+    goToPricing() {
+      // Naviguer vers la home page puis scroller vers la section pricing
+      this.$router.push('/').then(() => {
+        this.$nextTick(() => {
+          setTimeout(() => {
+            const pricingElement = document.getElementById('pricing');
+            if (pricingElement) {
+              pricingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 200);
+        });
+      });
+    },
   },
 };
 </script>
@@ -327,7 +343,7 @@ h1 {
 }
 
 .input-container {
-  background-color: #ececec;
+  background-color: #ffffff;
   padding: 10px;
   border-radius: 10px;
   display: flex;
@@ -338,6 +354,7 @@ h1 {
   margin-bottom: 20px;
   border: 2px solid transparent;
   transition: border 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .input-container:focus-within {
@@ -350,7 +367,7 @@ h1 {
   position: absolute;
   top: -10px;
   left: 10px;
-  background-color: #ececec;
+  background-color: #ffffff;
   color: #666;
   padding: 2px 5px;
   border-radius: 5px;

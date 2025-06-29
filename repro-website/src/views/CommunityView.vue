@@ -1,5 +1,5 @@
 <template>
-  <div class="community-wrapper">
+  <div class="community-wrapper page-with-footer">
     <div class="community-top-grid">
       <!-- Create Post -->
       <div class="create-post">
@@ -108,12 +108,15 @@
         </div>
       </div>
     </div>
+    
+    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { supabase } from '../supabase'
+import Footer from '../components/Footer.vue'
 
 const learners = [
   { name: 'John Doe', course: 'UX/UI débutant' },

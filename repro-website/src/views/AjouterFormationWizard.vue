@@ -1,5 +1,5 @@
 <template>
-  <div class="ajouter-formation-wizard">
+  <div class="ajouter-formation-wizard page-with-footer">
     <component
       :is="steps[currentStep].component"
       v-bind="steps[currentStep].props()"

@@ -4,7 +4,6 @@
     <button class="back-btn" @click="$emit('back')">&larr; Retour</button>
     <h2 class="title">Votre formation est prête !</h2>
     
-    <!-- Aperçu de la formation -->
     <div class="formation-preview">
       <div class="preview-header">
         <img v-if="coverImageUrl" :src="coverImageUrl" alt="Couverture" class="preview-cover" />
@@ -49,7 +48,6 @@
       </div>
     </div>
     
-    <!-- Fallback pour l'ancien format -->
     <div v-else-if="result">
       <div class="result-block">
         <h3>Résumé</h3>
@@ -80,7 +78,6 @@
       <span v-else>Sauvegarde en cours...</span>
     </button>
     
-    <!-- Barre de progression -->
     <div class="progress-bar">
       <span class="step active"></span>
       <span class="step active"></span>
@@ -118,34 +115,26 @@ async function saveFormation() {
       return
     }
 
-    // Préparer toutes les données en JSON - utiliser seulement les colonnes de base
     const formationData = {
       user_id: user.id,
       title: props.infos.title,
       theme: props.infos.theme,
       description: props.infos.description,
       
-      // Stocker TOUT dans formation_data en JSON pour éviter les erreurs de colonnes
       formation_data: {
-        // Informations de base
         infos: props.infos,
         
-        // Fichiers
         coverImageUrl: props.coverImageUrl,
         pdfUrl: props.pdfUrl,
         
-        // Configuration
         quizConfig: props.quizConfig,
         
-        // Données générées
         chapters: props.chapters,
         iaResult: props.result,
         
-        // Statistiques
         quizCount: props.chapters?.reduce((total, chapter) => total + (chapter.quizzes?.length || 0), 0) || 0,
         chapterCount: props.chapters?.length || 1,
         
-        // Métadonnées
         createdAt: new Date().toISOString(),
         version: "2.0"
       }

@@ -1,14 +1,10 @@
 <template>
   <div class="wizard-wrapper">
     <div class="wizard-step-infos">
-      <!-- Bouton retour -->
       <button class="back-btn" @click="$emit('back')">&larr; Retour</button>
 
-      <!-- Contenu principal en colonnes -->
       <div class="main-content">
-        <!-- Colonne gauche -->
         <div class="left-column">
-          <!-- Titre et champs -->
           <div class="form-group">
             <h2 class="title">Titre de la formation <span class="required">*</span></h2>
             <input
@@ -48,9 +44,7 @@
           </div>
         </div>
 
-        <!-- Colonne droite -->
         <div class="right-column">
-          <!-- Section photo (optionnelle) -->
           <div class="form-group">
             <h2 class="title">Photo de couverture (optionnel)</h2>
             <div class="cover-section">
@@ -73,7 +67,6 @@
             </div>
           </div>
 
-          <!-- Options État reconnu et certification -->
           <div class="form-group">
             <h2 class="title">Options <span class="required">*</span></h2>
             <div class="row" :class="{ 'error': localInfos.is_state_recognized === null && showErrors }">
@@ -104,14 +97,11 @@
         </div>
       </div>
 
-      <!-- Bouton suivant et barre de progression -->
       <div class="bottom-section">
         <button class="next-btn" @click="nextStep">
           Passer à l'étape suivante
         </button>
-
-        <!-- Barre de progression -->
-        <div class="progress-bar">
+                <div class="progress-bar">
           <span class="step active"></span>
           <span class="step active"></span>
           <span class="step"></span>
@@ -168,7 +158,6 @@ function removeCoverImage() {
 function nextStep() {
   showErrors.value = true
   
-  // Validation des champs obligatoires
   if (!localInfos.title.trim()) {
     alert('Veuillez saisir un titre pour la formation')
     return
@@ -194,7 +183,6 @@ function nextStep() {
     return
   }
   
-  // Si tout est valide, réinitialiser les erreurs et continuer
   showErrors.value = false
   emit('next', {
     infos: { ...localInfos },

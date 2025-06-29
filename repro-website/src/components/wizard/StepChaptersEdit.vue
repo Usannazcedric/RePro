@@ -1,7 +1,6 @@
 <template>
   <div class="wizard-wrapper">
     <div class="chapters-edit">
-      <!-- Bouton retour -->
       <button class="back-btn" @click="$emit('back')">&larr; Retour</button>
       
       <div class="header">
@@ -33,7 +32,6 @@
         </div>
 
         <div class="chapter-content">
-          <!-- Cours du chapitre -->
           <div v-for="(course, courseIndex) in chapter.courses" :key="course.id" class="content-item">
             <div class="item-header">
               <div class="item-number">{{ courseIndex + 1 }}</div>
@@ -67,12 +65,10 @@
             ></textarea>
           </div>
 
-          <!-- Bouton ajouter cours -->
           <div class="add-item-btn" @click="addCourse(chapterIndex)">
             + Ajouter un cours
           </div>
 
-          <!-- Quiz du chapitre -->
           <div v-for="(quiz, quizIndex) in chapter.quizzes" :key="quiz.id" class="content-item quiz-item">
             <div class="item-header">
               <div class="item-number quiz-number">{{ (chapterIndex * 10) + quizIndex + 51 }}</div>
@@ -104,7 +100,6 @@
               placeholder="Question du quiz"
             />
             
-            <!-- Options du quiz -->
             <div class="quiz-options">
               <div v-for="(option, letter) in quiz.options" :key="letter" class="quiz-option">
                 <input 
@@ -125,7 +120,6 @@
             </div>
           </div>
 
-          <!-- Bouton ajouter quiz -->
           <div class="add-item-btn" @click="addQuiz(chapterIndex)">
             + Ajouter un quiz
           </div>
@@ -140,7 +134,6 @@
       </button>
     </div>
 
-    <!-- Barre de progression -->
     <div class="progress-bar">
       <span class="step active"></span>
       <span class="step active"></span>

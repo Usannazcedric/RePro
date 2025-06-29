@@ -1,5 +1,5 @@
 <template>
-  <div class="edit-formation">
+  <div class="edit-formation page-with-footer">
     <div class="container">
       <div class="header">
         <button @click="goBack" class="back-btn">
@@ -208,6 +208,8 @@
         <p>Formation non trouvée</p>
       </div>
     </div>
+    
+    <Footer />
   </div>
 </template>
 
@@ -215,6 +217,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../supabase'
+import Footer from '../components/Footer.vue'
 
 const route = useRoute()
 const router = useRouter()

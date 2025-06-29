@@ -24,7 +24,6 @@
       <div class="desc">Faites défiler le nombre afin qu'il corresponde avec vos attentes</div>
       <button class="next-btn" @click="nextStep">Notre IA génère votre formation</button>
       
-      <!-- Barre de progression -->
       <div class="progress-bar">
         <span class="step active"></span>
         <span class="step active"></span>

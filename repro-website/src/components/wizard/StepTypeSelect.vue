@@ -1,7 +1,6 @@
 <template>
   <div class="wizard-wrapper">
     <div class="wizard-step-type">
-      <!-- Titre principal -->
       <div class="header">
         <h1 class="main-title">Il est temps de publier votre formation !</h1>
         <p class="subtitle">Choisissez le format qui vous convient le mieux</p>
@@ -34,7 +33,6 @@
         </div>
       </div>
 
-      <!-- Barre de progression -->
       <div class="progress-bar">
         <span class="step active"></span>
         <span class="step"></span>
@@ -47,7 +45,6 @@
 </template>
 
 <script setup>
-// Pas de logique, tout est géré par le parent via l'event 'next'
 </script>
 
 <style scoped>

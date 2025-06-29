@@ -1,5 +1,5 @@
 <template>
-  <div class="home-container">
+  <div class="home-container page-with-footer">
     <div class="hero-section">
       <div class="hero-left">
         <h1 class="hero-title">
@@ -20,8 +20,6 @@
       <div class="hero-right">
         <img src="/homepage1.svg" alt="Illustration SnapRead" class="hero-illustration" />
       </div>
-    </div>
-    
     </div>
     
     <div class="features-section">
@@ -82,13 +80,12 @@
         <div class="ai-cards">
           <div class="ai-card">
             <h3 class="card-title">
-              l'IA (nom de l'ia),<br />
+              Notre IA,<br />
               <span class="card-subtitle">l'avenir du e-learning</span>
             </h3>
             <p class="card-text">
-              Lorem ipsum dolor sit amet consectetur.<br />
-              Cursus odio magna turpis et diam elit.<br />
-              Pellentesque morbi vitae commodo dis.
+              Créez en un clic <br />
+              Importez votre plan de cours et obtenez automatiquement chapitres, supports et quiz sur mesure.
             </p>
             <img src="/computer.svg" alt="Computer" class="card-icon" />
             <div class="card-bottom">
@@ -102,9 +99,8 @@
               <span class="card-subtitle">simple et intuitif</span>
             </h3>
             <p class="card-text">
-              Lorem ipsum dolor sit amet consectetur.<br />
-              Cursus odio magna turpis et diam elit.<br />
-              Pellentesque morbi vitae commodo dis.
+              Publiez en un coup de main <br />
+              Concevez, éditez et partagez vos modules pédagogiques en quelques minutes, sur tous les appareils.
             </p>
             <img src="/petit bonhome.svg" alt="Personnage" class="card-icon" />
             <div class="card-bottom">
@@ -118,9 +114,8 @@
               par rapport aux concurrents
             </h3>
             <p class="card-text">
-              Lorem ipsum dolor sit amet consectetur.
-              Cursus odio magna turpis et diam elit.
-              Pellentesque morbi vitae commodo dis.
+              Visibilité & analytique <br />
+              Mise en avant prioritaire, statistiques d'engagement détaillées et recommandations IA pour maximiser l'impact de vos formations.
             </p>
             <img src="/main.svg" alt="Main" class="card-icon" />
             <div class="card-bottom">
@@ -132,7 +127,7 @@
     </div>
     
     <!-- Section des abonnements -->
-    <div class="pricing-section">
+    <div id="pricing" class="pricing-section">
       <div class="pricing-content">
         <h2 class="pricing-title">Nos abonnements</h2>
         
@@ -150,19 +145,19 @@
             </p>
                          <div class="plan-features">
                <div class="feature-item feature-included">
-                 <span class="feature-icon check-icon">✓</span>
+                 <div class="custom-check-icon"></div>
                  <span class="feature-text">1 Formation</span>
                </div>
                <div class="feature-item feature-excluded">
-                 <span class="feature-icon cross-icon">✗</span>
+                 <div class="custom-cross-icon"></div>
                  <span class="feature-text">Communauté</span>
                </div>
                <div class="feature-item feature-excluded">
-                 <span class="feature-icon cross-icon">✗</span>
+                 <div class="custom-cross-icon"></div>
                  <span class="feature-text">Visibilité</span>
                </div>
              </div>
-            <button class="plan-btn">Lancez-vous</button>
+            <router-link to="/register" class="plan-btn">Lancez-vous</router-link>
           </div>
           
           <div class="pricing-card">
@@ -178,19 +173,19 @@
             </p>
                          <div class="plan-features">
                <div class="feature-item feature-included">
-                 <span class="feature-icon check-icon">✓</span>
+                 <div class="custom-check-icon"></div>
                  <span class="feature-text">2 Formations</span>
                </div>
                <div class="feature-item feature-excluded">
-                 <span class="feature-icon cross-icon">✗</span>
+                 <div class="custom-cross-icon"></div>
                  <span class="feature-text">Communauté</span>
                </div>
                <div class="feature-item feature-excluded">
-                 <span class="feature-icon cross-icon">✗</span>
+                 <div class="custom-cross-icon"></div>
                  <span class="feature-text">Visibilité</span>
                </div>
              </div>
-            <button class="plan-btn">Lancez-vous</button>
+            <router-link to="/register" class="plan-btn">Lancez-vous</router-link>
           </div>
           
           <div class="pricing-card">
@@ -206,19 +201,19 @@
             </p>
                          <div class="plan-features">
                <div class="feature-item feature-included">
-                 <span class="feature-icon check-icon">✓</span>
+                 <div class="custom-check-icon"></div>
                  <span class="feature-text">5 Formations</span>
                </div>
                <div class="feature-item feature-included">
-                 <span class="feature-icon check-icon">✓</span>
+                 <div class="custom-check-icon"></div>
                  <span class="feature-text">Communauté</span>
                </div>
                <div class="feature-item feature-excluded">
-                 <span class="feature-icon cross-icon">✗</span>
+                 <div class="custom-cross-icon"></div>
                  <span class="feature-text">Visibilité</span>
                </div>
              </div>
-            <button class="plan-btn">Lancez-vous</button>
+            <router-link to="/register" class="plan-btn">Lancez-vous</router-link>
           </div>
           
           <div class="pricing-card">
@@ -234,30 +229,44 @@
             </p>
             <div class="plan-features">
               <div class="feature-item feature-included">
-                <span class="feature-icon check-icon">✓</span>
+                <div class="custom-check-icon"></div>
                 <span class="feature-text">10 Formations</span>
               </div>
               <div class="feature-item feature-included">
-                <span class="feature-icon check-icon">✓</span>
+                <div class="custom-check-icon"></div>
                 <span class="feature-text">Communauté</span>
               </div>
               <div class="feature-item feature-included">
-                <span class="feature-icon check-icon">✓</span>
+                <div class="custom-check-icon"></div>
                 <span class="feature-text">Visibilité</span>
               </div>
             </div>
-            <button class="plan-btn">Lancez-vous</button>
+            <router-link to="/register" class="plan-btn">Lancez-vous</router-link>
           </div>
         </div>
       </div>
     </div>
+    
+    <Footer />
+  </div>
 </template>
+
+<script>
+import Footer from '../components/Footer.vue'
+
+export default {
+  components: {
+    Footer
+  }
+}
+</script>
 
 <style scoped>
 .home-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 2rem;
+  margin-top: -2rem;
 }
 
 .hero-section {
@@ -265,7 +274,7 @@
   align-items: center;
   gap: 4rem;
   min-height: 60vh;
-  margin-top: -1rem;
+  margin-top: 4rem;
 }
 
 .hero-left {
@@ -356,7 +365,7 @@
   background: #7376FF;
   width: 96.83vw;
   margin-left: calc(-50vw + 50%);
-  margin-top: 8rem;
+  margin-top: 6rem;
   padding: 1.5rem;
   display: flex;
   justify-content: space-evenly;
@@ -451,7 +460,7 @@
 .enhanced-text {
   font-size: 0.95rem;
   line-height: 1.5;
-  color: white;
+  color: black;
   margin: 0;
   font-family: 'Nunito', sans-serif;
   font-weight: 300;
@@ -461,7 +470,7 @@
   background: #E9E9EE;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  padding: 6rem 0;
+  padding: 4rem 0;
 }
 
 .ai-content {
@@ -588,7 +597,7 @@
   background: #E9E9EE;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  margin-top: 2rem;
+  margin-top: -4rem;
   padding: 4rem 0;
   overflow-x: hidden;
 }
@@ -671,29 +680,52 @@
   font-family: 'Nunito', sans-serif;
 }
 
-.pricing-card .feature-icon {
+.custom-check-icon {
   width: 18px;
   height: 18px;
   margin-right: 0.8rem;
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 1;
-}
-
-.check-icon {
   background-color: #7376FF;
-  color: white;
+  border-radius: 50%;
+  position: relative;
 }
 
-.cross-icon {
+.custom-check-icon::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 7px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.custom-cross-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.8rem;
+  flex-shrink: 0;
   background-color: #ff4757;
-  color: white;
+  border-radius: 50%;
+  position: relative;
+}
+
+.custom-cross-icon::before,
+.custom-cross-icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 2px;
+  background-color: white;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.custom-cross-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .feature-text {
@@ -721,6 +753,9 @@
   transition: all 0.2s ease;
   font-family: 'Nunito', sans-serif;
   margin-top: auto;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .plan-btn:hover {

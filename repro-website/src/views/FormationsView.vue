@@ -1,7 +1,7 @@
 <template>
-  <div class="formations-page">
+  <div class="formations-page page-with-footer">
     <div v-if="!showWizard" class="formations-container">
-      <!-- Header -->
+
       <div class="page-header">
         <h1 class="page-title">Mes formations</h1>
         <button class="add-formation-btn" @click="showWizard = true">
@@ -9,7 +9,7 @@
         </button>
       </div>
 
-      <!-- Search and Filters -->
+
       <div class="filters-section">
         <div class="search-container">
           <input 
@@ -178,6 +178,9 @@
       <AjouterFormationWizard @close="showWizard = false" />
     </div>
     
+    <!-- Footer seulement quand le wizard n'est pas affiché -->
+    <Footer v-if="!showWizard" />
+    
     <!-- Modal d'aperçu (conservé pour compatibilité) -->
     <div v-if="showPreview" class="modal-overlay" @click="closePreview">
       <div class="modal-content" @click.stop>
@@ -270,6 +273,7 @@
         </div>
       </div>
     </div>
+    
   </div>
 </template>
 
@@ -278,6 +282,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../supabase'
 import AjouterFormationWizard from './AjouterFormationWizard.vue'
+import Footer from '../components/Footer.vue'
 
 const router = useRouter()
 
