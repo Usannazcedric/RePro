@@ -10,6 +10,13 @@ export default function AuthLayout() {
           title: 'Inscription' 
         }} 
       />
+      <Stack.Screen 
+        name="LoginScreen" 
+        options={{ 
+          headerShown: false,
+          title: 'Connexion' 
+        }} 
+      />
     </Stack>
   );
 }

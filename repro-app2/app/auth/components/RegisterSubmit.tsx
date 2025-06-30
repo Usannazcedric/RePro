@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 
@@ -26,7 +26,6 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
         throw authError;
       }
 
-      // Ensuite créer le profil avec l'ID de l'utilisateur créé
       const { data, error } = await supabase
         .from('profiles')
         .insert([
@@ -36,8 +35,8 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
             email: userData.email,
             tranche_age: userData.age,
             genre: userData.genre,
-            theme: userData.theme,
-            raison: userData.raison,
+            theme: userData.themes ? userData.themes.join(', ') : '',
+            raison: userData.raisons ? userData.raisons.join(', ') : '',
             rythme: userData.rythme
           }
         ]);
@@ -59,20 +58,43 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Récapitulatif</Text>
-      <Text>Nom d'utilisateur : {userData.username}</Text>
-      <Text>Email : {userData.email}</Text>
-      <Text>Âge : {userData.age}</Text>
-      <Text>Genre : {userData.genre}</Text>
-      <Text>Thème : {userData.theme}</Text>
-      <Text>Raison : {userData.raison}</Text>
-      <Text>Rythme : {userData.rythme}</Text>
-      <Button title="Précédent" onPress={onPrev} />
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <Button title="Soumettre" onPress={handleSubmit} />
-      )}
+      <View style={styles.progressBar}>
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>Merci pour votre patience</Text>
+          <Text style={styles.subtitle}>Votre profil a été créé avec succès</Text>
+        </View>
+
+        <View style={styles.imageContainer}>
+          <Image 
+            source={require('../../../assets/images/submitregister.png')} 
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#7376FF" />
+          ) : (
+            <>
+              <TouchableOpacity style={styles.startButton} onPress={handleSubmit}>
+                <Text style={styles.startButtonText}>Commencer à se former</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.backButton} onPress={onPrev}>
+                <Text style={styles.backButtonText}>Retour</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -80,13 +102,145 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-    marginTop: 50,
+    backgroundColor: '#fff',
+  },
+  progressBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 40,
+    paddingTop: 20,
+    gap: 8,
+  },
+  progressStep: {
+    flex: 1,
+    height: 13,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  progressStepActive: {
+    backgroundColor: '#7376FF',
+    shadowColor: '#7376FF',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 40,
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 60,
+  },
+  textContainer: {
+    alignItems: 'center',
   },
   title: {
     fontSize: 24,
-    marginBottom: 16,
+    fontWeight: 'bold',
     textAlign: 'center',
+    color: '#333',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#333',
+    fontWeight: '500',
+  },
+  imageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 40,
+  },
+  image: {
+    width: '100%',
+    height: 1000,
+  },
+  hexagonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hexagon: {
+    width: 120,
+    height: 120,
+    backgroundColor: '#7376FF',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#7376FF',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  checkmarkContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  checkmark: {
+    fontSize: 32,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+  },
+  startButton: {
+    width: '100%',
+    height: 56,
+    backgroundColor: '#7376FF',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#7376FF',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  startButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  backButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
   },
 });
