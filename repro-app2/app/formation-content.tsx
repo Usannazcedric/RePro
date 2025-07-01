@@ -432,7 +432,7 @@ export default function FormationContentScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Espace pour éviter le chevauchement avec la navbar */}
+          {/* Espace pour éviter lejhg chevauchement avec la navbar */}
           <View style={styles.bottomSpacer} />
         </ScrollView>
         
@@ -641,6 +641,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 16,
   },
+  
   certificateButton: {
     backgroundColor: '#7376FF',
     paddingVertical: 16,
