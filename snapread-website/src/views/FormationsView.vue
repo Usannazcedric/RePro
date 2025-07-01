@@ -1,52 +1,93 @@
 <template>
   <div class="formations-page page-with-footer">
     <div v-if="!showWizard" class="formations-container">
+      <div class="page-header-separated">
+        <h1 class="page-title-centered">Mes formations</h1>
+        
+        <div class="controls-line">
+          <div class="search-container">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="Rechercher la formation"
+              class="search-input"
+            />
+            <button class="search-btn">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
 
-      <div class="page-header">
-        <h1 class="page-title">Mes formations</h1>
-        <button class="add-formation-btn" @click="showWizard = true">
-          Ajouter une formation
-        </button>
-      </div>
+          <!-- Paire 1: Récent/Ancien -->
+          <div class="filter-pair">
+            <button
+              :class="['filter-btn', { active: activeFilter === 'recent' }]"
+              @click="setActiveFilter('recent')"
+            >
+              Récent
+            </button>
+            <button
+              :class="['filter-btn', { active: activeFilter === 'ancien' }]"
+              @click="setActiveFilter('ancien')"
+            >
+              Ancien
+            </button>
+          </div>
 
+          <!-- Paire 2: Textuel/Vidéo -->
+          <div class="filter-pair">
+            <button
+              :class="['filter-btn', { active: activeFilter === 'textuel' }]"
+              @click="setActiveFilter('textuel')"
+            >
+              Textuel
+            </button>
+            <button
+              :class="['filter-btn', { active: activeFilter === 'video' }]"
+              @click="setActiveFilter('video')"
+            >
+              Vidéo
+            </button>
+          </div>
 
-      <div class="filters-section">
-        <div class="search-container">
-          <input 
-            type="text" 
-            v-model="searchQuery"
-            placeholder="Rechercher la formation"
-            class="search-input"
-          />
-          <button class="search-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+          <!-- Paire 3: Tous/Publié/Inactif -->
+          <div class="filter-pair">
+            <button
+              :class="['filter-btn', { active: activeFormat === 'all' }]"
+              @click="setActiveFormat('all')"
+            >
+              Tous
+            </button>
+            <button
+              :class="['filter-btn', { active: activeFormat === 'published' }]"
+              @click="setActiveFormat('published')"
+            >
+              Publié
+            </button>
+            <button
+              :class="['filter-btn', { active: activeFilter === 'inactive' }]"
+              @click="setActiveFilter('inactive')"
+            >
+              Inactif
+            </button>
+          </div>
+          
+          <button class="add-formation-btn" @click="showWizard = true">
+            Ajouter une formation
           </button>
-        </div>
-
-        <div class="filters-right">
-          <div class="filter-buttons">
-            <button 
-              v-for="filter in filters" 
-              :key="filter.key"
-              :class="['filter-btn', { active: activeFilter === filter.key }]"
-              @click="setActiveFilter(filter.key)"
-            >
-              {{ filter.label }}
-            </button>
-          </div>
-
-          <div class="format-filters">
-            <button 
-              v-for="format in formatFilters" 
-              :key="format.key"
-              :class="['format-btn', { active: activeFormat === format.key }]"
-              @click="setActiveFormat(format.key)"
-            >
-              {{ format.label }}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -74,34 +115,56 @@
         <table class="formations-table">
           <thead>
             <tr>
+              <th class="table-header"></th>
               <th class="table-header">Titre & thème</th>
               <th class="table-header">Format</th>
               <th class="table-header">Achats</th>
               <th class="table-header">Prix</th>
               <th class="table-header">Posté</th>
               <th class="table-header">Avis</th>
+              <th class="table-header"></th>
               <th class="table-header">Publié</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="formation in filteredFormations" :key="formation.id" class="table-row">
               <!-- Titre & thème avec image -->
+              <td>
+                <div class="formation-image">
+                  <img
+                    v-if="formation.formation_data?.coverImageUrl"
+                    :src="formation.formation_data.coverImageUrl"
+                    :alt="formation.title"
+                    class="cover-thumbnail"
+                  />
+                  <div v-else class="cover-placeholder">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M14 2V8H20"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </td>
               <td class="title-cell">
                 <div class="formation-info">
-                  <div class="formation-image">
-                    <img 
-                      v-if="formation.formation_data?.coverImageUrl" 
-                      :src="formation.formation_data.coverImageUrl" 
-                      :alt="formation.title"
-                      class="cover-thumbnail"
-                    />
-                    <div v-else class="cover-placeholder">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </div>
-                  </div>
                   <div class="formation-details">
                     <h3 class="formation-title">{{ formation.title }}</h3>
                     <p class="formation-theme">{{ formation.theme }}</p>
@@ -120,9 +183,7 @@
               </td>
 
               <!-- Prix -->
-              <td class="prix-cell">
-                49.99€
-              </td>
+              <td class="prix-cell">{{ formation.price ? `${formation.price.toFixed(2)}€` : '49.99€' }}</td>
 
               <!-- Posté -->
               <td class="date-cell">
@@ -147,25 +208,94 @@
               <!-- Publié (toggle + actions) -->
               <td class="actions-cell">
                 <div class="actions-container">
-                  <button @click="editFormation(formation.id)" class="action-btn edit-btn" title="Modifier">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M18.5 2.49998C18.8978 2.10216 19.4374 1.87866 20 1.87866C20.5626 1.87866 21.1022 2.10216 21.5 2.49998C21.8978 2.89781 22.1213 3.43737 22.1213 3.99998C22.1213 4.56259 21.8978 5.10216 21.5 5.49998L12 15L8 16L9 12L18.5 2.49998Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                  
-                  <button @click="deleteFormation(formation.id)" class="action-btn delete-btn" title="Supprimer">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <button
+                    @click="editFormation(formation.id)"
+                    class="action-btn edit-btn"
+                    title="Modifier"
+                  >
+                    <svg
+                      width="43"
+                      height="42"
+                      viewBox="0 0 43 43"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="0.5"
+                        y="1"
+                        width="42"
+                        height="41"
+                        rx="11.5"
+                        fill="white"
+                        fill-opacity="0.8"
+                      />
+                      <rect x="0.5" y="1" width="42" height="41" rx="11.5" stroke="currentColor" />
+                      <path
+                        d="M24.0757 15.7425L27.2575 18.9243M14 29V25.2879L25.9774 13.3105C26.1763 13.1117 26.446 13 26.7272 13C27.0084 13 27.2782 13.1117 27.4771 13.3105L29.6895 15.5229C29.8883 15.7218 30 15.9916 30 16.2728C30 16.554 29.8883 16.8237 29.6895 17.0226L17.7121 29H14Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                   </button>
 
-                  <label class="toggle-switch">
-                    <input type="checkbox" :checked="formation.is_published" @change="togglePublish(formation.id, $event)">
-                    <span class="toggle-slider"></span>
-                  </label>
+                  <button
+                    @click="deleteFormation(formation.id)"
+                    class="action-btn delete-btn"
+                    title="Supprimer"
+                  >
+                    <svg
+                      width="43"
+                      height="42"
+                      viewBox="0 0 43 43"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect
+                        x="0.5"
+                        y="1"
+                        width="42"
+                        height="41"
+                        rx="11.5"
+                        fill="white"
+                        fill-opacity="0.8"
+                      />
+                      <rect x="0.5" y="1" width="42" height="41" rx="11.5" stroke="currentColor" />
+                      <path
+                        d="M27.5 15V29C27.5 29.5 27 30 26.5 30H21.5H16.5C16 30 15.5 29.5 15.5 29V15"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M13.5 15H29.5"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M19.5 14H23.5M19.5 19V26M23.5 19V26"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
+              </td>
+              <td>
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    :checked="formation.is_published"
+                    @change="togglePublish(formation.id, $event)"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
               </td>
             </tr>
           </tbody>
@@ -177,10 +307,10 @@
     <div v-else>
       <AjouterFormationWizard @close="showWizard = false" />
     </div>
-    
+
     <!-- Footer seulement quand le wizard n'est pas affiché -->
     <Footer v-if="!showWizard" />
-    
+
     <!-- Modal d'aperçu (conservé pour compatibilité) -->
     <div v-if="showPreview" class="modal-overlay" @click="closePreview">
       <div class="modal-content" @click.stop>
@@ -188,31 +318,41 @@
           <h2>{{ selectedFormation?.title }}</h2>
           <button @click="closePreview" class="close-btn">×</button>
         </div>
-        
+
         <div class="modal-body">
           <div v-if="selectedFormation?.formation_data?.coverImageUrl" class="cover-preview mb-4">
-            <img :src="selectedFormation.formation_data.coverImageUrl" :alt="selectedFormation.title" class="cover-img-preview" />
+            <img
+              :src="selectedFormation.formation_data.coverImageUrl"
+              :alt="selectedFormation.title"
+              class="cover-img-preview"
+            />
           </div>
-          
+
           <div class="formation-info mb-4">
             <p><strong>Thème:</strong> {{ selectedFormation?.theme }}</p>
             <p><strong>Description:</strong> {{ selectedFormation?.description }}</p>
             <p><strong>Chapitres:</strong> {{ getChapterCount(selectedFormation) }}</p>
             <p><strong>Quiz total:</strong> {{ getQuizCount(selectedFormation) }}</p>
           </div>
-          
+
           <!-- Nouveau format avec chapitres -->
           <div v-if="hasChapters(selectedFormation)" class="chapters-content">
             <h3 class="font-bold mb-4 text-lg">📚 Contenu de la formation</h3>
-            
-            <div v-for="chapter in getChapters(selectedFormation)" :key="chapter.id" class="chapter-section mb-6">
+
+            <div
+              v-for="chapter in getChapters(selectedFormation)"
+              :key="chapter.id"
+              class="chapter-section mb-6"
+            >
               <h4 class="font-semibold text-lg mb-3 text-purple-600">
                 Chapitre {{ chapter.id }}: {{ chapter.title }}
               </h4>
-              
+
               <!-- Cours du chapitre -->
               <div v-if="chapter.courses?.length" class="courses-section mb-4">
-                <h5 class="font-medium mb-2 text-gray-700">📖 Cours ({{ chapter.courses.length }})</h5>
+                <h5 class="font-medium mb-2 text-gray-700">
+                  📖 Cours ({{ chapter.courses.length }})
+                </h5>
                 <div v-for="course in chapter.courses" :key="course.id" class="course-item mb-2">
                   <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <span class="course-number">{{ course.id }}</span>
@@ -224,16 +364,21 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Quiz du chapitre -->
               <div v-if="chapter.quizzes?.length" class="quizzes-section mb-4">
-                <h5 class="font-medium mb-2 text-gray-700">🎯 Quiz ({{ chapter.quizzes.length }})</h5>
+                <h5 class="font-medium mb-2 text-gray-700">
+                  🎯 Quiz ({{ chapter.quizzes.length }})
+                </h5>
                 <div v-for="quiz in chapter.quizzes" :key="quiz.id" class="quiz-item mb-3">
                   <div class="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
                     <p class="font-medium text-gray-800 mb-2">{{ quiz.question }}</p>
                     <ul class="ml-4 text-sm text-gray-600">
-                      <li v-for="(option, letter) in quiz.options" :key="letter" 
-                          :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }">
+                      <li
+                        v-for="(option, letter) in quiz.options"
+                        :key="letter"
+                        :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }"
+                      >
                         {{ letter }}. {{ option }}
                         <span v-if="letter === quiz.correctAnswer"> ✅</span>
                       </li>
@@ -243,28 +388,35 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Ancien format de fallback -->
           <div v-else>
             <div v-if="selectedFormation?.summary" class="summary mb-4">
               <h3 class="font-bold mb-2">📄 Résumé</h3>
               <p class="text-gray-700">{{ selectedFormation.summary }}</p>
             </div>
-            
+
             <div v-if="selectedFormation?.quizzes?.length" class="quizzes mb-4">
               <h3 class="font-bold mb-2">🎯 Quiz ({{ selectedFormation.quizzes.length }})</h3>
-              <div v-for="(quiz, index) in selectedFormation.quizzes" :key="index" class="quiz-preview mb-3">
+              <div
+                v-for="(quiz, index) in selectedFormation.quizzes"
+                :key="index"
+                class="quiz-preview mb-3"
+              >
                 <p class="font-medium">{{ index + 1 }}. {{ quiz.question }}</p>
                 <ul class="ml-4 text-sm text-gray-600">
-                  <li v-for="(option, letter) in quiz.options" :key="letter" 
-                      :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }">
+                  <li
+                    v-for="(option, letter) in quiz.options"
+                    :key="letter"
+                    :class="{ 'text-green-600 font-medium': letter === quiz.correctAnswer }"
+                  >
                     {{ letter }}. {{ option }}
                     <span v-if="letter === quiz.correctAnswer"> ✅</span>
                   </li>
                 </ul>
               </div>
             </div>
-            
+
             <div v-if="selectedFormation?.tips" class="tips">
               <h3 class="font-bold mb-2">💡 Conseils</h3>
               <p class="text-gray-700">{{ selectedFormation.tips }}</p>
@@ -273,7 +425,6 @@
         </div>
       </div>
     </div>
-    
   </div>
 </template>
 
@@ -303,14 +454,15 @@ const activeFormat = ref('all')
 
 const filters = [
   { key: 'recent', label: 'Récent' },
+  { key: 'ancien', label: 'Ancien' },
   { key: 'video', label: 'Vidéo' },
-  { key: 'textuel', label: 'Textuel' }
+  { key: 'textuel', label: 'Textuel' },
 ]
 
 const formatFilters = [
   { key: 'all', label: 'Tous' },
-  { key: 'published', label: 'Publiée' },
-  { key: 'inactive', label: 'Inactive' }
+  { key: 'published', label: 'Publié' },
+  { key: 'inactive', label: 'Inactif' },
 ]
 
 const steps = [
@@ -318,10 +470,10 @@ const steps = [
   'Analyse du contenu',
   'Génération du résumé',
   'Création des quiz',
-  'Finalisation'
+  'Finalisation',
 ]
 
-const LOCAL_STORAGE_KEY = 'aiContentFormation';
+const LOCAL_STORAGE_KEY = 'aiContentFormation'
 
 // Computed property for filtered formations
 const filteredFormations = computed(() => {
@@ -330,19 +482,20 @@ const filteredFormations = computed(() => {
   // Filter by search query
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(formation => 
-      formation.title.toLowerCase().includes(query) ||
-      formation.theme.toLowerCase().includes(query) ||
-      formation.description?.toLowerCase().includes(query)
+    filtered = filtered.filter(
+      (formation) =>
+        formation.title.toLowerCase().includes(query) ||
+        formation.theme.toLowerCase().includes(query) ||
+        formation.description?.toLowerCase().includes(query),
     )
   }
 
   // Filter by format
   if (activeFormat.value !== 'all') {
     if (activeFormat.value === 'published') {
-      filtered = filtered.filter(formation => formation.is_published)
+      filtered = filtered.filter((formation) => formation.is_published)
     } else if (activeFormat.value === 'inactive') {
-      filtered = filtered.filter(formation => !formation.is_published)
+      filtered = filtered.filter((formation) => !formation.is_published)
     }
   }
 
@@ -383,7 +536,9 @@ function handleFileChange(event) {
 }
 
 async function getCurrentUser() {
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   return session?.user
 }
 
@@ -412,7 +567,7 @@ async function generateContent(file) {
 
     const response = await fetch('http://localhost:3000/api/analyze-ebook', {
       method: 'POST',
-      body: formData
+      body: formData,
     })
 
     if (!response.ok) {
@@ -438,7 +593,6 @@ async function generateContent(file) {
       console.error('❌ Format de données incorrect:', data)
       throw new Error('Les données reçues ne sont pas dans le format attendu')
     }
-
   } catch (error) {
     console.error('❌ Erreur:', error)
     loading.value = false
@@ -452,18 +606,16 @@ async function saveContent() {
 
   try {
     saving.value = true
-    const { error } = await supabase
-      .from('formations')
-      .insert([
-        {
-          user_id: user.id,
-          title: ebooks.value[0]?.name || 'Formation sans titre',
-          summary: aiContent.value.summary,
-          quizzes: aiContent.value.quizzes,
-          tips: aiContent.value.tips,
-          created_at: new Date()
-        }
-      ])
+    const { error } = await supabase.from('formations').insert([
+      {
+        user_id: user.id,
+        title: ebooks.value[0]?.name || 'Formation sans titre',
+        summary: aiContent.value.summary,
+        quizzes: aiContent.value.quizzes,
+        tips: aiContent.value.tips,
+        created_at: new Date(),
+      },
+    ])
 
     if (error) throw error
 
@@ -486,21 +638,23 @@ function selectAnswer(quizIndex, letter) {
 }
 
 function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('fr-FR', { 
+  return new Date(dateStr).toLocaleDateString('fr-FR', {
     day: '2-digit',
-    month: '2-digit', 
-    year: 'numeric' 
+    month: '2-digit',
+    year: 'numeric',
   })
 }
 
 async function fetchFormations() {
   loadingFormations.value = true
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session?.user) {
     formations.value = []
     loadingFormations.value = false
@@ -527,18 +681,17 @@ function editFormation(formationId) {
 }
 
 async function deleteFormation(formationId) {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cette formation ? Cette action est irréversible.')) {
+  if (
+    !confirm('Êtes-vous sûr de vouloir supprimer cette formation ? Cette action est irréversible.')
+  ) {
     return
   }
-  
+
   try {
-    const { error } = await supabase
-      .from('formations')
-      .delete()
-      .eq('id', formationId)
-    
+    const { error } = await supabase.from('formations').delete().eq('id', formationId)
+
     if (error) throw error
-    
+
     alert('Formation supprimée avec succès !')
     fetchFormations()
   } catch (error) {
@@ -549,17 +702,17 @@ async function deleteFormation(formationId) {
 
 async function togglePublish(formationId, event) {
   const isPublished = event.target.checked
-  
+
   try {
     const { error } = await supabase
       .from('formations')
       .update({ is_published: isPublished })
       .eq('id', formationId)
-    
+
     if (error) throw error
-    
+
     // Update local state
-    const formation = formations.value.find(f => f.id === formationId)
+    const formation = formations.value.find((f) => f.id === formationId)
     if (formation) {
       formation.is_published = isPublished
     }
@@ -592,12 +745,12 @@ function getChapters(formation) {
   if (formation?.formation_data?.chapters && formation.formation_data.chapters.length > 0) {
     return formation.formation_data.chapters
   }
-  
+
   // Fallback: colonnes directes (si elles existent)
   if (formation?.chapters && formation.chapters.length > 0) {
     return formation.chapters
   }
-  
+
   return []
 }
 
@@ -614,7 +767,7 @@ function getQuizCount(formation) {
       return total + (chapter.quizzes?.length || 0)
     }, 0)
   }
-  
+
   // Fallback ancien format
   return formation?.quizzes?.length || 0
 }
@@ -625,25 +778,25 @@ function getFormationPreview(formation) {
     // Utiliser le premier cours du premier chapitre
     return `${chapters[0].courses[0].content?.substring(0, 100) || 'Contenu non disponible'}...`
   }
-  
+
   // Fallback ancien format
   if (formation?.summary) {
     return `${formation.summary.substring(0, 100)}...`
   }
-  
+
   return 'Aperçu non disponible'
 }
 </script>
 
 <style scoped>
 .formations-page {
-  background: #E9E9EE;
+  background: #e9e9ee;
   min-height: 100vh;
   padding: 2rem;
 }
 
 .formations-container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   background: white;
   border-radius: 24px;
@@ -652,22 +805,40 @@ function getFormationPreview(formation) {
 }
 
 /* Header */
-.page-header {
+.page-header-separated {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 2rem;
+  gap: 2rem;
 }
 
-.page-title {
+.page-title-centered {
   font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.controls-line {
+  display: flex;
+  align-items: center;
+  gap: 4.8rem;
+  flex-wrap: nowrap;
+  flex: 1;
+  justify-content: center;
+}
+
+.search-container {
+  position: relative;
+  width: 280px;
+  flex-shrink: 0;
 }
 
 .add-formation-btn {
-  background: #7376FF;
+  background: #7376ff;
   color: white;
   border: none;
   border-radius: 12px;
@@ -675,7 +846,10 @@ function getFormationPreview(formation) {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  margin-left: 0;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .add-formation-btn:hover {
@@ -684,28 +858,6 @@ function getFormationPreview(formation) {
 }
 
 /* Filters Section */
-.filters-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
-}
-
-.search-container {
-  position: relative;
-  width: 350px;
-  min-width: 300px;
-  flex-shrink: 0;
-}
-
-.filters-right {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-shrink: 0;
-}
-
 .search-input {
   width: 100%;
   padding: 12px 48px 12px 16px;
@@ -718,7 +870,7 @@ function getFormationPreview(formation) {
 }
 
 .search-input:focus {
-  border-color: #7376FF;
+  border-color: #7376ff;
   box-shadow: 0 0 0 3px rgba(115, 118, 255, 0.1);
 }
 
@@ -738,56 +890,50 @@ function getFormationPreview(formation) {
   justify-content: center;
 }
 
-.filter-buttons {
+.filter-pair {
   display: flex;
-  gap: 0.5rem;
+  gap: 0; /* remove gap for segmented buttons */
 }
 
-.filter-btn {
+.filter-pair .filter-btn {
   padding: 0.5rem 1rem;
   border: 1px solid #d1d5db;
   background: white;
-  border-radius: 8px;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 0;
+  border-radius: 0; /* reset radius */
 }
 
-.filter-btn:hover {
-  border-color: #7376FF;
-  color: #7376FF;
+.filter-pair .filter-btn:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
-.filter-btn.active {
-  background: #7376FF;
+.filter-pair .filter-btn:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.filter-pair .filter-btn:not(:last-child) {
+  border-right: none; /* collapse adjacent borders */
+}
+
+/* Special case for 3-button groups - middle button has no radius */
+.filter-pair .filter-btn:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.filter-pair .filter-btn:hover {
+  border-color: #7376ff;
+  color: #7376ff;
+}
+
+.filter-pair .filter-btn.active {
+  background: #7376ff;
   color: white;
-  border-color: #7376FF;
-}
-
-.format-filters {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.format-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.format-btn:hover {
-  border-color: #7376FF;
-  color: #7376FF;
-}
-
-.format-btn.active {
-  background: #7376FF;
-  color: white;
-  border-color: #7376FF;
+  border-color: #7376ff;
 }
 
 /* Loading and Empty States */
@@ -802,7 +948,7 @@ function getFormationPreview(formation) {
 
 .loader {
   border: 2px solid #e5e7eb;
-  border-top-color: #7376FF;
+  border-top-color: #7376ff;
   border-radius: 50%;
   width: 20px;
   height: 20px;
@@ -830,61 +976,85 @@ function getFormationPreview(formation) {
 /* Table Styles */
 .formations-table-container {
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  border: none;
+  background: white;
 }
 
 .formations-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
 }
 
 .table-header {
-  background: #f9fafb;
-  padding: 1rem;
-  text-align: left;
+  background: transparent;
+  padding: 0.375rem 0rem;
+  text-align: center;
   font-weight: 600;
-  color: #374151;
+  color: #6b7280;
   font-size: 0.875rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
+.table-header:first-child {
+  text-align: center;
+  /* padding-left: 1.5rem; */
+}
+
 .table-row {
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s ease;
 }
 
+.table-row:not(:last-child) td {
+  padding-bottom: 30px;
+}
+
+.table-row:not(:first-child) td {
+  padding-top: 30px;
+}
+
+.table-row:first-child td:first-child {
+  padding-top: 30px;
+}
+
 .table-row:hover {
-  background: #f9fafb;
+  background: #fafafa;
 }
 
 .table-row td {
-  padding: 1rem;
+  padding: 0rem 1.625rem;
   vertical-align: middle;
+  text-align: center;
+  border: none;
 }
 
-/* Title Cell */
+.table-row td:first-child {
+  text-align: center;
+  padding-left: 1.5rem;
+  padding-right: 10px;
+  vertical-align: top;
+}
+
+.table-row td:nth-child(2) {
+  padding-left: 0px;
+}
+
 .title-cell {
-  min-width: 300px;
+  width: 150px;
 }
 
 .formation-info {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
 }
 
 .formation-image {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 133px;
+  height: 77px;
 }
 
 .cover-thumbnail {
@@ -894,6 +1064,13 @@ function getFormationPreview(formation) {
 }
 
 .cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 8px;
   color: #9ca3af;
 }
 
@@ -916,18 +1093,21 @@ function getFormationPreview(formation) {
 
 /* Format Cell */
 .format-badge {
-  background: #f3f4f6;
+  /* background: #f3f4f6; */
   color: #374151;
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 /* Other Cells */
-.achats-cell, .prix-cell, .date-cell {
+.achats-cell,
+.prix-cell,
+.date-cell {
   font-size: 0.875rem;
   color: #374151;
+  font-weight: 500;
 }
 
 .avis-cell {
@@ -937,7 +1117,8 @@ function getFormationPreview(formation) {
 .rating {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.375rem;
   font-size: 0.875rem;
 }
 
@@ -953,7 +1134,7 @@ function getFormationPreview(formation) {
 
 .star {
   color: #d1d5db;
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .star.filled {
@@ -967,49 +1148,59 @@ function getFormationPreview(formation) {
 .rating-score {
   color: #6b7280;
   font-size: 0.875rem;
+  font-weight: 500;
 }
 
 /* Actions Cell */
 .actions-container {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 0.625rem;
 }
 
 .action-btn {
   background: none;
   border: none;
-  padding: 0.5rem;
-  border-radius: 6px;
+  padding: 0;
+  border-radius: 0.375rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .edit-btn {
-  color: #7376FF;
+  color: #7376ff;
+  width: 33px;
+  height: 32px;
+  /* margin-right: 0.625rem; */
 }
 
 .edit-btn:hover {
-  background: #f0f0ff;
+  background: rgba(115, 118, 255, 0.1);
 }
 
 .delete-btn {
-  color: #ef4444;
+  color: #7376ff;
+  width: 33px;
+  height: 32px;
+  /* margin-right: 0.625rem; */
 }
 
 .delete-btn:hover {
-  background: #fef2f2;
+  background: rgba(115, 118, 255, 0.1);
 }
 
 /* Toggle Switch */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: 3rem;
+  height: 1.5rem;
 }
 
 .toggle-switch input {
@@ -1027,27 +1218,28 @@ function getFormationPreview(formation) {
   bottom: 0;
   background-color: #d1d5db;
   transition: 0.3s;
-  border-radius: 24px;
+  border-radius: 1.5rem;
 }
 
 .toggle-slider:before {
   position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
+  content: '';
+  height: 1.125rem;
+  width: 1.125rem;
+  left: 0.1875rem;
+  bottom: 0.1875rem;
   background-color: white;
   transition: 0.3s;
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 input:checked + .toggle-slider {
-  background-color: #7376FF;
+  background-color: #7376ff;
 }
 
 input:checked + .toggle-slider:before {
-  transform: translateX(20px);
+  transform: translateX(1.5rem);
 }
 
 /* Modal styles (conservés) */
@@ -1140,7 +1332,7 @@ input:checked + .toggle-slider:before {
 }
 
 .course-number {
-  background: #7376FF;
+  background: #7376ff;
   color: white;
   width: 28px;
   height: 28px;
@@ -1159,7 +1351,7 @@ input:checked + .toggle-slider:before {
 
 .course-item .flex:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .quiz-item .bg-yellow-50:hover {
@@ -1167,43 +1359,98 @@ input:checked + .toggle-slider:before {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .formations-page {
-    padding: 1rem;
-  }
-  
+@media (max-width: 1400px) {
   .formations-container {
-    padding: 1rem;
+    max-width: 100%;
   }
   
-  .page-header {
+  .search-container {
+    width: 240px;
+  }
+  
+  .controls-line {
+    gap: 0.75rem;
+  }
+  
+  .filter-pair .filter-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .add-formation-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .page-header-separated {
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: stretch;
   }
   
-  .filters-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .filters-right {
-    flex-direction: column;
+  .controls-line {
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 1rem;
   }
   
   .search-container {
-    min-width: auto;
+    width: 100%;
+    max-width: 300px;
   }
-  
+}
+
+@media (max-width: 768px) {
+  .formations-page {
+    padding: 1rem;
+  }
+
+  .formations-container {
+    padding: 1rem;
+  }
+
+  .page-header-separated {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .controls-line {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .filter-pair {
+    justify-content: center;
+  }
+
+  .search-container {
+    width: 100%;
+    max-width: none;
+  }
+
   .formations-table-container {
     overflow-x: scroll;
   }
-  
+
   .formations-table {
     min-width: 800px;
   }
 }
-</style>
+
+@media (max-width: 480px) {
+  .filter-pair {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
   
+  .filter-pair .filter-btn {
+    flex: 1;
+    min-width: 70px;
+    text-align: center;
+  }
+}
+</style>

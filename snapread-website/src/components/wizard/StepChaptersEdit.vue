@@ -129,33 +129,54 @@
 
 
     <div class="actions">
-      <button @click="nextStep" class="next-btn">
-        Passer à l'étape suivante
+      <button @click="saveFormation" class="next-btn" :disabled="saving">
+        {{ saving ? 'Sauvegarde en cours...' : 'Sauvegarder et terminer' }}
       </button>
+      
+     
     </div>
-
     <div class="progress-bar">
-      <span class="step active"></span>
-      <span class="step active"></span>
-      <span class="step active"></span>
-      <span class="step active"></span>
-      <span class="step active"></span>
-    </div>
+        <span class="step active"></span>
+        <span class="step active"></span>
+        <span class="step active"></span>
+        <span class="step active"></span>
+        <span class="step active"></span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, defineProps, defineEmits, onMounted } from 'vue'
+import { supabase } from '../../supabase'
 
 const props = defineProps({
   chapters: {
     type: Array,
     required: true
+  },
+  infos: {
+    type: Object,
+    required: true
+  },
+  pdfUrl: {
+    type: String,
+    required: true
+  },
+  coverImageUrl: {
+    type: String
+  },
+  quizConfig: {
+    type: Object,
+    required: true
+  },
+  result: {
+    type: Object
   }
 })
 
 const emit = defineEmits(['next', 'update-chapters', 'back'])
+const saving = ref(false)
 
 onMounted(() => {
   console.log('🔍 StepChaptersEdit - Chapitres reçus:', props.chapters)
@@ -307,9 +328,65 @@ function createDefaultChapters() {
   emit('update-chapters', defaultChapters)
 }
 
-function nextStep() {
-  console.log('🚀 Envoi des chapitres:', props.chapters)
-  emit('next', props.chapters)
+async function saveFormation() {
+  if (saving.value) return
+  
+  saving.value = true
+  
+  try {
+    const user = (await supabase.auth.getSession()).data.session?.user
+    if (!user) {
+      alert('Vous devez être connecté')
+      return
+    }
+
+    const formationData = {
+      user_id: user.id,
+      title: props.infos.title,
+      theme: props.infos.theme,
+      description: props.infos.description,
+      price: props.infos.price,
+      
+      formation_data: {
+        infos: props.infos,
+        
+        coverImageUrl: props.coverImageUrl,
+        pdfUrl: props.pdfUrl,
+        
+        quizConfig: props.quizConfig,
+        
+        chapters: props.chapters,
+        iaResult: props.result,
+        
+        quizCount: props.chapters?.reduce((total, chapter) => total + (chapter.quizzes?.length || 0), 0) || 0,
+        chapterCount: props.chapters?.length || 1,
+        
+        createdAt: new Date().toISOString(),
+        version: "2.0"
+      }
+    }
+
+    console.log('💾 Sauvegarde des données:', formationData)
+
+    const { error } = await supabase
+      .from('formations')
+      .insert([formationData])
+
+    if (error) {
+      console.error('Erreur Supabase:', error)
+      alert('Erreur lors de la sauvegarde: ' + error.message)
+      return
+    }
+
+    alert('Formation sauvegardée avec succès !')
+    emit('next') // This will trigger wizard completion
+    
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors de la sauvegarde')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -679,6 +756,18 @@ function nextStep() {
 
 .next-btn:hover {
   background: #5d60d6;
+  transform: translateY(-1px);
+}
+
+.next-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.next-btn:disabled:hover {
+  background: #9ca3af;
+  transform: none;
 }
 
 .no-chapters {

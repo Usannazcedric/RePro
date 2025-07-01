@@ -30,9 +30,7 @@
           />
         </div>
         <h2>{{ userProfile?.username || 'Chargement...' }}</h2>
-        <div class="progress-bar">
-          <div class="progress" :style="{ width: progress + '%' }"></div>
-        </div>
+        <div class="separator"></div>
       </div>
       <nav class="navigation">
         <RouterLink to="/profile/profile" class="nav-link" :class="{ active: $route.path === '/profile/profile' }">
@@ -85,7 +83,6 @@ export default {
     return {
       user: null,
       userProfile: null,
-      progress: 50,
       uploading: false,
       editProfile: {
         username: '',
@@ -391,19 +388,11 @@ h2 {
   100% { transform: rotate(360deg); }
 }
 
-.progress-bar {
-  width: 100%;
-  height: 10px;
-  background-color: #e5e7eb;
-  border-radius: 5px;
-  overflow: hidden;
+.separator {
+  width: 114%;
+  height: 1.4px;
+  background-color: #B7B7B7;
   margin: 10px 0;
-}
-
-.progress {
-  height: 100%;
-  background-color: #7376FF;
-  transition: width 0.3s ease;
 }
 
 .navigation {
@@ -480,7 +469,7 @@ h2 {
 .content {
   flex: 1;
   padding: 20px;
-  background-color: #ffffff;
+  background-color: #FAFAFA;
   border-radius: 40px;
   color: #374151;
   box-shadow: 0 4px 18px rgba(115, 118, 255, 0.15);

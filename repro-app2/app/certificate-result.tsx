@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { getFontFamily } from '../constants/Fonts';
 import { supabase } from '../lib/supabase';
-import { TestnetBadgeService } from '../services/testnetBadgeService';
 import ArrowIcon from '../assets/images/arrow.svg';
 import StarEmptyIcon from '../assets/images/starempty.svg';
 import StarFullIcon from '../assets/images/starfull.svg';
@@ -28,7 +27,6 @@ export default function CertificateResultScreen() {
   const [userProgress, setUserProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [quizStats, setQuizStats] = useState({ correct: 0, total: 0 });
-  const [badgeService] = useState(() => new TestnetBadgeService());
   const [generatingBadge, setGeneratingBadge] = useState(false);
 
   const handleStarPress = (starIndex: number) => {
@@ -70,7 +68,6 @@ export default function CertificateResultScreen() {
       if (progressError) throw progressError;
       setUserProgress(progressData || []);
 
-      // Calculer les statistiques des quiz
       const chapters = formationData?.formation_data?.iaResult?.chapters || [];
       let totalQuizzes = 0;
       chapters.forEach((chapter: any) => {
@@ -87,7 +84,7 @@ export default function CertificateResultScreen() {
     }
   };
 
-  const generateBadgeNFT = async () => {
+  const generateBadge = async () => {
     if (generatingBadge) return;
     
     try {
@@ -98,79 +95,12 @@ export default function CertificateResultScreen() {
         Alert.alert('Erreur', 'Vous devez être connecté pour générer un badge');
         return;
       }
-
-      // Obtenir les informations du testnet
-      const testnetInfo = badgeService.getTestnetInfo();
-      console.log('🌐 Testnet Info:', testnetInfo);
-
-      const result = await badgeService.generateFormationBadge(
-        user.id,
-        formationId as string,
-        quizStats.correct,
-        quizStats.total
-      );
-
-      if (result.success) {
-        Alert.alert(
-          'Badge NFT généré sur testnet !',
-          `Votre badge unique a été créé sur ${result.network}.\n\n` +
-          `🎯 Token ID: ${result.tokenId}\n` +
-          `🔗 Transaction: ${result.transactionHash?.substring(0, 10)}...\n\n` +
-          `📍 Réseau: ${result.network}\n` +
-          `💰 Frais: Gratuit (testnet)\n\n` +
-          `Vous pouvez voir la transaction sur l'explorateur blockchain et votre badge dans la section "Succès".`,
-          [
-            {
-              text: 'Voir sur l\'explorateur',
-              onPress: () => {
-                // En production, on pourrait ouvrir l'URL dans le navigateur
-                console.log('🔗 Block Explorer:', result.blockExplorer);
-                Alert.alert(
-                  'Explorateur Blockchain',
-                  `Transaction visible sur:\n${result.blockExplorer}\n\n(Dans une vraie app, cela ouvrirait automatiquement le navigateur)`
-                );
-              }
-            },
-            {
-              text: 'Voir mes badges',
-              onPress: () => router.push('/(tabs)/success')
-            },
-            {
-              text: 'OK',
-              style: 'default'
-            }
-          ]
-        );
-      } else {
-        // Gestion des erreurs spécifiques au testnet
-        let errorMessage = result.error || 'Erreur lors de la génération du badge';
-        
-        if (errorMessage.includes('Solde insuffisant')) {
-          const instructions = badgeService.getTestTokensInstructions();
-          Alert.alert(
-            'Tokens de test requis',
-            `Pour créer un badge NFT sur le testnet, vous avez besoin de tokens gratuits.\n\n${instructions}`,
-            [
-              {
-                text: 'Obtenir des tokens',
-                onPress: () => {
-                  console.log('🚰 Redirection vers le faucet...');
-                  Alert.alert(
-                    'Faucet Mumbai',
-                    'Allez sur https://faucet.polygon.technology/ pour obtenir des tokens gratuits.\n\nUne fois les tokens reçus, réessayez de générer votre badge.'
-                  );
-                }
-              },
-              { text: 'OK' }
-            ]
-          );
-        } else {
-          Alert.alert('Erreur', errorMessage);
-        }
-      }
+      
+      Alert.alert('Succès', 'Badge généré avec succès!');
+      
     } catch (error) {
       console.error('Erreur lors de la génération du badge:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue lors de la génération du badge');
+      Alert.alert('Erreur', 'Impossible de générer le badge');
     } finally {
       setGeneratingBadge(false);
     }
@@ -261,14 +191,11 @@ export default function CertificateResultScreen() {
                   styles.primaryButton,
                   { opacity: generatingBadge ? 0.7 : 1 }
                 ]}
-                onPress={generateBadgeNFT}
+                onPress={generateBadge}
                 disabled={generatingBadge}
               >
                 <Text style={styles.primaryButtonText}>
-                  {generatingBadge ? 'Génération du badge NFT...' : '🔗 Générer mon badge NFT (Testnet)'}
-                </Text>
-                <Text style={styles.primaryButtonSubtext}>
-                  Mumbai Testnet • Gratuit
+                  {generatingBadge ? 'Génération du badge...' : ' Générer mon badge'}
                 </Text>
               </TouchableOpacity>
 
@@ -452,12 +379,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     fontFamily: getFontFamily('bold'),
-  },
-  primaryButtonSubtext: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 4,
-    fontFamily: getFontFamily('regular'),
   },
   secondaryButtonsContainer: {
     flexDirection: 'row',

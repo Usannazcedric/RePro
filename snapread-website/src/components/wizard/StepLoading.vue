@@ -20,7 +20,7 @@
         <span class="step active"></span>
         <span class="step active"></span>
         <span class="step active"></span>
-        <span class="step active"></span>
+        <span class="step"></span>
       </div>
     </div>
   </div>

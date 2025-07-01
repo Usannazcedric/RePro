@@ -15,10 +15,8 @@ import { ref } from 'vue'
 import StepTypeSelect from '../components/wizard/StepTypeSelect.vue'
 import StepInfos from '../components/wizard/StepInfos.vue'
 import StepUpload from '../components/wizard/StepUpload.vue'
-import StepQuizSelect from '../components/wizard/StepQuizSelect.vue'
 import StepLoading from '../components/wizard/StepLoading.vue'
 import StepChaptersEdit from '../components/wizard/StepChaptersEdit.vue'
-import StepResult from '../components/wizard/StepResult.vue'
 
 const currentStep = ref(0)
 const type = ref('pdf')
@@ -49,12 +47,6 @@ const steps = [
     props: () => ({})
   },
   {
-    component: StepQuizSelect,
-    props: () => ({ 
-      config: quizConfig.value 
-    })
-  },
-  {
     component: StepLoading,
     props: () => ({
       pdfUrl: pdfUrl.value,
@@ -64,17 +56,11 @@ const steps = [
   {
     component: StepChaptersEdit,
     props: () => ({
-      chapters: chapters.value
-    })
-  },
-  {
-    component: StepResult,
-    props: () => ({
+      chapters: chapters.value,
       infos: infos.value,
       pdfUrl: pdfUrl.value,
       coverImageUrl: coverImageUrl.value,
       quizConfig: quizConfig.value,
-      chapters: chapters.value,
       result: iaResult.value
     })
   }
@@ -96,9 +82,6 @@ function handleNext(payload) {
     pdfUrl.value = payload.pdfUrl
     currentStep.value++
   } else if (currentStep.value === 3) {
-    quizConfig.value = payload
-    currentStep.value++
-  } else if (currentStep.value === 4) {
     // IA loading step, handled by StepLoading
     // next is called with IA result
     console.log('🤖 Résultat IA reçu:', payload)
@@ -118,11 +101,10 @@ function handleNext(payload) {
       chapters.value = []
     }
     currentStep.value++
-  } else if (currentStep.value === 5) {
-    // Chapters edit step
-    console.log('✏️ Chapitres modifiés reçus:', payload)
-    chapters.value = payload
-    currentStep.value++
+  } else if (currentStep.value === 4) {
+    // StepChaptersEdit - final step, triggers wizard completion
+    console.log('✏️ Formation sauvegardée, fin du wizard')
+    handleSaved()
   }
 }
 

@@ -42,6 +42,22 @@
               :class="{ 'error': !localInfos.description.trim() && showErrors }"
             />
           </div>
+
+          <div class="form-group">
+            <h2 class="title">Prix de la formation <span class="required">*</span></h2>
+            <div class="price-input-container">
+              <input
+                v-model.number="localInfos.price"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="49.99"
+                class="input price-input"
+                :class="{ 'error': (!localInfos.price || localInfos.price <= 0) && showErrors }"
+              />
+              <span class="currency">€</span>
+            </div>
+          </div>
         </div>
 
         <div class="right-column">
@@ -101,7 +117,7 @@
         <button class="next-btn" @click="nextStep">
           Passer à l'étape suivante
         </button>
-                <div class="progress-bar">
+        <div class="progress-bar">
           <span class="step active"></span>
           <span class="step active"></span>
           <span class="step"></span>
@@ -132,6 +148,7 @@ const localInfos = reactive({
   title: props.infos?.title || '',
   theme: props.infos?.theme || '',
   description: props.infos?.description || '',
+  price: props.infos?.price || null,
   is_state_recognized: props.infos?.is_state_recognized ?? null,
   is_creator_certified: props.infos?.is_creator_certified ?? false
 })
@@ -140,7 +157,7 @@ function handleCoverUpload(event) {
   const file = event.target.files[0]
   if (!file) return
   if (file.size > 5 * 1024 * 1024) {
-    alert('Le fichier est trop volumineux. Taille maximale : 5MB')
+    alert('Le fichier est trop volumineux. Taille maximale : 5MB')
     return
   }
   coverFile.value = file
@@ -170,6 +187,11 @@ function nextStep() {
   
   if (!localInfos.description.trim()) {
     alert('Veuillez saisir une description pour la formation')
+    return
+  }
+  
+  if (!localInfos.price || localInfos.price <= 0) {
+    alert('Veuillez saisir un prix valide pour la formation')
     return
   }
   
@@ -267,6 +289,25 @@ function nextStep() {
   min-height: 80px;
   resize: vertical;
   line-height: 1.5;
+}
+
+.price-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.price-input {
+  padding-right: 2.5rem;
+}
+
+.currency {
+  position: absolute;
+  right: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.95rem;
+  pointer-events: none;
 }
 
 .cover-section {

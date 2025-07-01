@@ -185,6 +185,10 @@ export default {
 
 <style scoped>
 
+*{
+  background-color: #FAFAFA;
+}
+
 .edit-input-container {
   display: flex;
   gap: 10px;
@@ -208,7 +212,7 @@ export default {
 .section-title {
   font-size: 1.3rem;
   font-weight: 800;
-  color: #7376FF;
+  color: #000;
   margin-bottom: 24px;
   font-family: 'Nunito', sans-serif;
 }
@@ -298,16 +302,16 @@ export default {
 }
 
 .verif-level {
-  background: #f8f8fa;
+  background: #fff;
   border-radius: 14px;
   padding: 18px 20px 12px 20px;
   margin-bottom: 8px;
   position: relative;
+  border: 1px solid #E0E0E0;
 }
 
 .verif-label {
-  font-weight: 700;
-  color: #7376FF;
+  color: #000;
   font-size: 1.1rem;
   margin-bottom: 4px;
 }
@@ -316,8 +320,7 @@ export default {
   position: absolute;
   right: 20px;
   top: 18px;
-  color: #7376FF;
-  font-weight: 700;
+  color: #808080;
   font-size: 1rem;
 }
 
@@ -338,11 +341,11 @@ export default {
 }
 
 .verif-complete .verif-status {
-  color: #22c55e;
+  color: #808080;
 }
 
 .verif-complete .verif-bar {
-  background: linear-gradient(90deg, #22c55e 100%, #ececec 100%);
+  background: linear-gradient(90deg, #7376FF 100%, #ececec 100%);
 }
 
 .verif-locked .verif-status {
