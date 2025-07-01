@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "reset": "watchman watch-del-all && expo start --clear",
+    "dev": "rm -rf .expo && watchman watch-del-all && expo start --clear",
+    "reset": "rm -rf .expo && rm -rf node_modules/.cache && watchman watch-del-all && expo start --clear",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",

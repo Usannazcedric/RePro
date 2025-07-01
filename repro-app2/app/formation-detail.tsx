@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
@@ -18,6 +19,7 @@ import CertifIcon from '../assets/images/certif.svg';
 import StepsIcon from '../assets/images/steps.svg';
 import TradIcon from '../assets/images/trad.svg';
 import ArrowIcon from '../assets/images/arrow.svg';
+import CustomTabBar from '../components/CustomTabBar';
 
 const { width } = Dimensions.get('window');
 
@@ -43,6 +45,7 @@ export default function FormationDetailScreen() {
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDarkImage, setIsDarkImage] = useState(true);
+  const [purchasing, setPurchasing] = useState(false);
 
   useEffect(() => {
     fetchFormation();
@@ -63,6 +66,88 @@ export default function FormationDetailScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkIfAlreadyPurchased = async (userId: string, formationId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('purchased_formations')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('formation_id', formationId)
+        .eq('status', 'active')
+        .single();
+
+      return !error && data;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const purchaseFormation = async () => {
+    if (purchasing) return;
+    
+    try {
+      setPurchasing(true);
+      
+      // Vérifier si l'utilisateur est connecté
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        Alert.alert('Erreur', 'Vous devez être connecté pour acheter une formation');
+        return;
+      }
+
+      // Vérifier si la formation est déjà achetée
+      const alreadyPurchased = await checkIfAlreadyPurchased(user.id, id as string);
+      
+      if (alreadyPurchased) {
+        Alert.alert('Formation déjà achetée', 'Vous avez déjà acheté cette formation !');
+        return;
+      }
+
+      // Enregistrer l'achat
+      const { error: purchaseError } = await supabase
+        .from('purchased_formations')
+        .insert([
+          {
+            user_id: user.id,
+            formation_id: id,
+            price: 0.00, // Gratuit pour le moment
+            status: 'active'
+          }
+        ]);
+
+      if (purchaseError) {
+        console.error('Erreur lors de l\'achat:', purchaseError);
+        Alert.alert('Erreur', 'Une erreur est survenue lors de l\'achat');
+        return;
+      }
+
+      // Succès - rediriger vers la page explore
+      Alert.alert(
+        'Achat réussi !', 
+        'La formation a été ajoutée à vos formations', 
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.push('/(tabs)/explore');
+            }
+          }
+        ]
+      );
+
+    } catch (error) {
+      console.error('Erreur lors de l\'achat:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de l\'achat');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const navigateToContent = () => {
+    purchaseFormation();
   };
 
   const getChapters = (formation: Formation) => {
@@ -91,28 +176,7 @@ export default function FormationDetailScreen() {
     return formation?.formation_data?.coverImageUrl || null;
   };
 
-  // Fonction pour naviguer vers la page de contenu
-  const navigateToContent = () => {
-    console.log('🔥 BOUTON CLIQUÉ - Navigation vers formation-content avec ID:', id);
-    console.log('🔥 Type de ID:', typeof id);
-    console.log('🔥 Router disponible:', !!router);
-    
-    try {
-      console.log('🔥 Tentative de navigation...');
-      router.push({
-        pathname: '/formation-content',
-        params: { id: id }
-      } as any);
-      console.log('🔥 Navigation lancée avec succès');
-    } catch (error) {
-      console.error('🔥 ERREUR de navigation:', error);
-    }
-  };
-
-  // Fonction pour analyser la luminosité de l'image
   const analyzeImageBrightness = (imageUrl: string) => {
-    // Pour simplifier, on va utiliser une heuristique basée sur l'URL ou le thème
-    // Dans un cas réel, on pourrait analyser les pixels de l'image
     const darkThemes = ['python', 'code', 'informatique', 'programmation'];
     const lightThemes = ['design', 'arts', 'mathématiques'];
     
@@ -273,15 +337,24 @@ export default function FormationDetailScreen() {
                   {formation.description || "Cette formation vous permettra d'acquérir de nouvelles compétences et d'obtenir une certification reconnue."}
                 </Text>
 
-                <View style={{ height: 100 }} />
+                <View style={{ height: 150 }} />
 
                 <View style={styles.purchaseContainerInline}>
                   <TouchableOpacity 
-                    style={[styles.purchaseButton, { backgroundColor: '#7376FF' }]}
+                    style={[
+                      styles.purchaseButton, 
+                      { 
+                        backgroundColor: purchasing ? '#9ca3af' : '#7376FF',
+                        opacity: purchasing ? 0.7 : 1 
+                      }
+                    ]}
                     onPress={navigateToContent}
                     activeOpacity={0.8}
+                    disabled={purchasing}
                   >
-                    <Text style={styles.purchaseButtonText}>Acheter la formation</Text>
+                    <Text style={styles.purchaseButtonText}>
+                      {purchasing ? 'Achat en cours...' : 'Acheter la formation'}
+                    </Text>
                     <Text style={styles.purchaseSubtext}>Certificat inclus dans SnapRead</Text>
                   </TouchableOpacity>
                 </View>
@@ -289,6 +362,7 @@ export default function FormationDetailScreen() {
             </View>
           </ScrollView>
         </View>
+        <CustomTabBar />
       </SafeAreaView>
     </>
   );
@@ -366,10 +440,11 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    zIndex: 2,
+    zIndex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 120,
   },
   topSpacer: {
     height: 220,

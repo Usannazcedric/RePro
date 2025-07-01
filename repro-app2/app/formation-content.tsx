@@ -12,20 +12,24 @@ import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { getFontFamily } from '../constants/Fonts';
 import ArrowIcon from '../assets/images/arrow.svg';
+import FlecheIcon from '../assets/images/fleche.svg';
+import CustomTabBar from '../components/CustomTabBar';
 
 interface Chapter {
   id: string;
   title: string;
-  videos?: Array<{
+  courses?: Array<{
     id: string;
     title: string;
+    content: string;
     duration: string;
-    type: 'video' | 'cours';
   }>;
   quizzes?: Array<{
     id: string;
     title: string;
-    score?: string;
+    question: string;
+    options: Record<string, string>;
+    correctAnswer: string;
   }>;
 }
 
@@ -36,6 +40,9 @@ interface Formation {
   theme: string;
   formation_data?: {
     chapters?: Chapter[];
+    iaResult?: {
+      chapters?: Chapter[];
+    };
   };
 }
 
@@ -67,34 +74,32 @@ export default function FormationContentScreen() {
   };
 
   const getChapters = (): Chapter[] => {
-    if (formation?.formation_data?.chapters) {
-      return formation.formation_data.chapters;
+    if (formation?.formation_data?.iaResult?.chapters) {
+      return formation.formation_data.iaResult.chapters;
     }
-    
-    // Données de démonstration si pas de chapitres dans la DB
     return [
       {
         id: '1',
         title: 'Chapitre 1',
-        videos: [
-          { id: '1', title: 'Introduction à Python', duration: '3:25', type: 'video' },
-          { id: '2', title: 'Son histoire', duration: '4:25', type: 'cours' },
-          { id: '3', title: 'Pourquoi utiliser Python ?', duration: '4:25', type: 'video' },
+        courses: [
+          { id: '1', title: 'Introduction à Python', content: 'Introduction to Python', duration: '3:25' },
+          { id: '2', title: 'Son histoire', content: 'The History of Python', duration: '4:25' },
+          { id: '3', title: 'Pourquoi utiliser Python ?', content: 'Why Use Python?', duration: '4:25' },
         ],
         quizzes: [
-          { id: '1', title: 'Test - Chapitre 1', score: '09/10 RÉUSSI' }
+          { id: '1', title: 'Test - Chapitre 1', question: 'What is Python?', options: { a: 'A snake', b: 'A programming language', c: 'A fruit' }, correctAnswer: 'b' }
         ]
       },
       {
         id: '2',
         title: 'Chapitre 2',
-        videos: [
-          { id: '4', title: 'Comment utiliser Python', duration: '7:25', type: 'video' },
-          { id: '5', title: 'Les astuces', duration: '5:00', type: 'video' },
-          { id: '6', title: "Comment s'améliorer", duration: '4:25', type: 'video' },
+        courses: [
+          { id: '4', title: 'Comment utiliser Python', content: 'How to Use Python', duration: '7:25' },
+          { id: '5', title: 'Les astuces', content: 'Python Tips', duration: '5:00' },
+          { id: '6', title: "Comment s'améliorer", content: 'How to Improve', duration: '4:25' },
         ],
         quizzes: [
-          { id: '2', title: 'Test - Chapitre 2' }
+          { id: '2', title: 'Test - Chapitre 2', question: 'What is the correct syntax for a comment in Python?', options: { a: '//', b: '/*', c: '#' }, correctAnswer: 'c' }
         ]
       }
     ];
@@ -136,27 +141,17 @@ export default function FormationContentScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowIcon 
-              width={20} 
-              height={20} 
-              color="#7376FF"
-            />
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowIcon width={20} height={20} color="#7376FF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Mes formations</Text>
         </View>
 
         <ScrollView style={styles.container}>
-          {/* Titre principal */}
           <Text style={styles.mainTitle}>Python</Text>
           <Text style={styles.subtitle}>Introduction à la programmation</Text>
 
-          {/* Onglets */}
           <View style={styles.tabsContainer}>
             <TouchableOpacity style={[styles.tab, styles.activeTab]}>
               <Text style={[styles.tabText, styles.activeTabText]}>Formation</Text>
@@ -166,53 +161,71 @@ export default function FormationContentScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Chapitres */}
-          {chapters.map((chapter, chapterIndex) => (
-            <View key={chapter.id} style={styles.chapterSection}>
-              <Text style={styles.chapterTitle}>{chapter.title}</Text>
-              
-              {/* Vidéos/Cours */}
-              {chapter.videos?.map((video, videoIndex) => (
-                <TouchableOpacity key={video.id} style={styles.contentItem}>
-                  <View style={styles.contentLeft}>
-                    <Text style={styles.contentNumber}>
-                      {chapterIndex * 10 + videoIndex + 1}
-                    </Text>
-                    <View style={styles.contentInfo}>
-                      <Text style={styles.contentTitle}>{video.title}</Text>
-                      <Text style={styles.contentMeta}>
-                        {video.type === 'video' ? 'Vidéo' : 'Cours'} • {video.duration}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.playButton}>
-                    <Text style={styles.playIcon}>▶</Text>
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
+          {chapters.map((chapter, chapterIndex) => {
+            const getRomanNumeral = (num: number) => {
+              const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+              return romanNumerals[num - 1] || num.toString();
+            };
 
-              {/* Quiz */}
-              {chapter.quizzes?.map((quiz, quizIndex) => (
-                <TouchableOpacity key={quiz.id} style={styles.contentItem}>
-                  <View style={styles.contentLeft}>
-                    <Text style={styles.contentNumber}>
-                      {chapterIndex * 10 + (chapter.videos?.length || 0) + quizIndex + 1}
-                    </Text>
-                    <View style={styles.contentInfo}>
-                      <Text style={styles.contentTitle}>{quiz.title}</Text>
-                      <Text style={styles.contentMeta}>
-                        Quiz {quiz.score ? `• ${quiz.score}` : ''}
-                      </Text>
+            let itemCounter = chapterIndex === 0
+              ? 1
+              : chapters
+                  .slice(0, chapterIndex)
+                  .reduce((acc, ch) => acc + (ch.courses?.length || 0) + (ch.quizzes?.length || 0), 1);
+
+            return (
+              <View key={chapter.id} style={styles.chapterSection}>
+                <Text style={styles.chapterTitle}>
+                  {getRomanNumeral(chapterIndex + 1)}. {chapter.title}
+                </Text>
+
+                {chapter.courses?.map((course, courseIndex) => (
+                  <TouchableOpacity key={course.id} style={styles.courseItem}>
+                    <View style={styles.contentLeft}>
+                      <Text style={styles.contentNumber}>{itemCounter + courseIndex}</Text>
+                      <View style={styles.contentInfo}>
+                        <Text style={styles.contentTitle}>{course.title}</Text>
+                        <Text style={styles.courseMeta}>Cours • {course.duration}</Text>
+                      </View>
                     </View>
-                  </View>
-                  <TouchableOpacity style={styles.playButton}>
-                    <Text style={styles.playIcon}>▶</Text>
+                    <TouchableOpacity style={styles.courseButton} onPress={() => {/* navigation */}}>
+                      <FlecheIcon 
+                        width={150} 
+                        height={150} 
+                        color="#374151" 
+                        style={{ marginTop: 55 }}
+                      />
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))}
+                ))}
+
+                {chapter.quizzes?.map((quiz, quizIndex) => {
+                  const quizNumber = itemCounter + (chapter.courses?.length || 0) + quizIndex;
+                  return (
+                    <TouchableOpacity key={quiz.id} style={styles.quizItem}>
+                      <View style={styles.contentLeft}>
+                        <Text style={styles.contentNumber}>{quizNumber}</Text>
+                        <View style={styles.contentInfo}>
+                          <Text style={styles.contentTitle}>{quiz.title}</Text>
+                          <Text style={styles.quizMeta}>Quiz • {quiz.question}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity style={styles.quizButton} onPress={() => {/* navigation */}}>
+                        <FlecheIcon 
+                          width={150} 
+                          height={150} 
+                          color="#374151" 
+                          style={{ marginTop: 55 }}
+                        />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            );
+          })}
         </ScrollView>
+        <CustomTabBar />
       </SafeAreaView>
     </>
   );
@@ -286,6 +299,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingBottom: 120,
   },
   mainTitle: {
     fontSize: 32,
@@ -335,20 +349,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: getFontFamily('bold'),
   },
-  contentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
   contentLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -372,22 +372,56 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontFamily: getFontFamily('semiBold'),
   },
-  contentMeta: {
+  courseMeta: {
     fontSize: 14,
     color: '#6b7280',
     fontFamily: getFontFamily('regular'),
   },
-  playButton: {
+  courseItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quizItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quizMeta: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontFamily: getFontFamily('regular'),
+  },
+  courseButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#f3f4f6',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playIcon: {
-    fontSize: 16,
-    color: '#374151',
-    marginLeft: 2,
+  quizButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-}); 
+});
