@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
+// @ts-ignore
 import { useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 
@@ -10,6 +11,7 @@ interface RegisterSubmitProps {
 }
 
 export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterSubmitProps) {
+  // @ts-ignore
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,39 +19,64 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
     setIsLoading(true);
     
     try {
+      console.log('🚀 === DÉBUT DE L\'INSCRIPTION ===');
+      console.log('📝 Données utilisateur reçues:', userData);
+      
+      // Créer l'utilisateur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
       });
 
       if (authError) {
+        console.error('❌ Erreur auth:', authError);
+        if (authError.message.includes('User already registered')) {
+          Alert.alert('Erreur', 'Cet email est déjà enregistré. Veuillez vous connecter.');
+          return;
+        }
         throw authError;
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: authData.user?.id,
-            username: userData.username,
-            email: userData.email,
-            tranche_age: userData.age,
-            genre: userData.genre,
-            theme: userData.themes ? userData.themes.join(', ') : '',
-            raison: userData.raisons ? userData.raisons.join(', ') : '',
-            rythme: userData.rythme
-          }
-        ]);
+      if (!authData.user) {
+        throw new Error('Erreur lors de la création du compte utilisateur');
+      }
 
-      if (error) {
-        throw error;
+      console.log('✅ Utilisateur créé avec succès:', {
+        id: authData.user.id,
+        email: authData.user.email,
+        created_at: authData.user.created_at
+      });
+
+      // Préparer les données du profil
+      const profileData = {
+        id: authData.user.id,
+        username: userData.username,
+        email: userData.email,
+        tranche_age: userData.age,
+        genre: userData.genre,
+        theme: userData.themes ? userData.themes.join(', ') : '',
+        raison: userData.raisons ? userData.raisons.join(', ') : '',
+        rythme: userData.rythme
+      };
+
+      console.log('📋 Données du profil à insérer:', profileData);
+
+      // Créer le profil
+      const { data: profileResult, error: profileError } = await supabase
+        .from('profiles')
+        .insert([profileData])
+        .select();
+
+      if (profileError) {
+        Alert.alert('Erreur', 'Erreur lors de la création du profil. Veuillez réessayer.');
+        return;
       }
 
       onSubmit();
-      Alert.alert('Inscription réussie', 'Votre inscription a bien été prise en compte !');
-      router.replace('/(tabs)');
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
+      Alert.alert('Inscription réussie', 'Votre inscription a bien été prise en compte ! Vous pouvez maintenant vous connecter.');
+      router.replace('/auth');
+    } catch (error: any) {
+      
       Alert.alert('Erreur', 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.');
     } finally {
       setIsLoading(false);

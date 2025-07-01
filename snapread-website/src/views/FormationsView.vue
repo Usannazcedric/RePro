@@ -179,7 +179,7 @@
 
               <!-- Achats -->
               <td class="achats-cell">
-                {{ getChapterCount(formation) }}
+                {{ formation.purchase_count || 0 }}
               </td>
 
               <!-- Prix -->
@@ -660,12 +660,46 @@ async function fetchFormations() {
     loadingFormations.value = false
     return
   }
-  const { data, error } = await supabase
-    .from('formations')
-    .select('*')
-    .eq('user_id', session.user.id)
-    .order('created_at', { ascending: false })
-  formations.value = data || []
+  
+  try {
+    // Récupérer les formations
+    const { data: formationsData, error: formationsError } = await supabase
+      .from('formations')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+    
+    if (formationsError) throw formationsError
+    
+    if (!formationsData || formationsData.length === 0) {
+      formations.value = []
+      loadingFormations.value = false
+      return
+    }
+    
+    // Pour chaque formation, compter les achats
+    const formationsWithPurchases = await Promise.all(
+      formationsData.map(async (formation) => {
+        const { count, error: countError } = await supabase
+          .from('purchased_formations')
+          .select('*', { count: 'exact', head: true })
+          .eq('formation_id', formation.id)
+          .eq('status', 'active')
+        
+        return {
+          ...formation,
+          purchase_count: countError ? 0 : (count || 0)
+        }
+      })
+    )
+    
+    formations.value = formationsWithPurchases
+    
+  } catch (error) {
+    console.error('Erreur lors du chargement des formations:', error)
+    formations.value = []
+  }
+  
   loadingFormations.value = false
 }
 

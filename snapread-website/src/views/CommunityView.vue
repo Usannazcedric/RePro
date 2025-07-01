@@ -41,17 +41,23 @@
       <div class="sidebar-block sidebar-learners">
         <div class="sidebar-header">
           <span>Nouveaux apprenants</span>
-          <a href="#">Voir tout</a>
+          <router-link to="/profile/transactions" class="voir-tout-link">Voir tout</router-link>
         </div>
-        <ul>
-          <li v-for="user in learners.slice(0,2)" :key="user.name">
-            <div class="avatar"></div>
+        <ul v-if="recentLearners.length > 0">
+          <li v-for="learner in recentLearners.slice(0,2)" :key="learner.id">
+            <div class="avatar">
+              <img v-if="learner.avatar_url" :src="learner.avatar_url" class="profile-image" alt="avatar" />
+              <div v-else class="avatar-placeholder">{{ learner.name.charAt(0).toUpperCase() }}</div>
+            </div>
             <div>
-              <div class="name">{{ user.name }}</div>
-              <div class="info">A acheté votre formation - {{ user.course }}</div>
+              <div class="name">{{ learner.name }}</div>
+              <div class="info">A acheté votre formation - {{ learner.formationTitle }}</div>
             </div>
           </li>
         </ul>
+        <div v-else class="no-learners">
+          <p class="no-learners-text">Aucun nouvel apprenant pour le moment</p>
+        </div>
       </div>
     </div>
     <!-- Feed and Sidebars -->
@@ -79,32 +85,43 @@
           </div>
           <div class="post-footer">
             <div class="reactions">
-              <span class="icon like"></span>
-              <span class="icon haha"></span>
-              <span class="icon heart"></span>
-              <span>0 Reaction</span>
+              <div v-if="getPostReactions(post.id).length > 0" class="reaction-bubbles">
+                <div 
+                  v-for="reaction in getPostReactions(post.id)" 
+                  :key="reaction.emoji" 
+                  class="reaction-bubble"
+                >
+                  <span class="reaction-emoji">{{ reaction.emoji }}</span>
+                  <span class="reaction-count">{{ reaction.count }}</span>
+                </div>
+              </div>
+              <span v-else class="no-reactions">Aucune réaction</span>
             </div>
             <button class="share">Partager</button>
           </div>
         </div>
       </div>
-      <!-- Sidebars -->
       <div class="sidebars">
-        <!-- Last Comments -->
         <div class="sidebar-block">
           <div class="sidebar-header">
-            <span>Derniers commentaires</span>
+            <span>Dernières notifications</span>
             <a href="#">Voir tout</a>
           </div>
-          <ul>
-            <li v-for="user in commenters" :key="user.name">
-              <div class="avatar"></div>
+          <ul v-if="recentReactions.length > 0">
+            <li v-for="reaction in recentReactions" :key="reaction.id">
+              <div class="avatar">
+                <img v-if="reaction.avatar_url" :src="reaction.avatar_url" class="profile-image" alt="avatar" />
+                <div v-else class="avatar-placeholder">{{ reaction.name.charAt(0).toUpperCase() }}</div>
+              </div>
               <div>
-                <div class="name">{{ user.name }}</div>
-                <div class="info">A commenté votre dernier poste</div>
+                <div class="name">{{ reaction.name }}</div>
+                <div class="info">A réagi avec {{ reaction.emoji }} à {{ reaction.postContent.length > 30 ? reaction.postContent.substring(0, 30) + '...' : reaction.postContent }}</div>
               </div>
             </li>
           </ul>
+          <div v-else class="no-reactions-sidebar">
+            <p class="no-reactions-text">Aucune réaction récente</p>
+          </div>
         </div>
       </div>
     </div>
@@ -118,22 +135,8 @@ import { ref, onMounted } from 'vue'
 import { supabase } from '../supabase'
 import Footer from '../components/Footer.vue'
 
-const learners = [
-  { name: 'John Doe', course: 'UX/UI débutant' },
-  { name: 'Jules Bounes', course: 'Data débutant' },
-  { name: 'Arthur Salami', course: 'Python débutant' },
-  { name: 'Louna Martino', course: 'UX/UI débutant' },
-  { name: 'Selena Patozeg', course: 'Data débutant' }
-]
-
-const commenters = [
-  { name: 'John Doe' },
-  { name: 'Jules Bounes' },
-  { name: 'Arthur Salami' },
-  { name: 'Louna Martino' },
-  { name: 'Selena Patozeg' },
-  { name: 'Patrick Manchesso' }
-]
+const recentLearners = ref([])
+const recentReactions = ref([])
 
 const postContent = ref('')
 const postImage = ref(null)
@@ -143,6 +146,7 @@ const formations = ref([])
 const selectedFormation = ref(null)
 const feed = ref([])
 const user = ref(null)
+const postReactions = ref([])
 
 const fileInput = ref(null)
 
@@ -170,11 +174,202 @@ async function fetchProfilesForPosts(posts) {
   return map
 }
 
+async function fetchPostReactions(postIds) {
+  if (!postIds || postIds.length === 0) return
+  
+  try {
+    const { data: reactions, error } = await supabase
+      .from('reactions')
+      .select('*')
+      .in('post_id', postIds)
+    
+    if (error) {
+      console.error('Erreur lors du chargement des réactions:', error)
+      return
+    }
+    
+    postReactions.value = reactions || []
+  } catch (error) {
+    console.error('Erreur lors du chargement des réactions:', error)
+  }
+}
+
+function getPostReactions(postId) {
+  const reactions = postReactions.value.filter(r => r.post_id === postId)
+  const groupedReactions = {}
+  
+  reactions.forEach(reaction => {
+    if (groupedReactions[reaction.emoji]) {
+      groupedReactions[reaction.emoji]++
+    } else {
+      groupedReactions[reaction.emoji] = 1
+    }
+  })
+  
+  return Object.entries(groupedReactions).map(([emoji, count]) => ({
+    emoji,
+    count
+  }))
+}
+
+async function fetchRecentLearners() {
+  if (!user.value) return
+  
+  try {
+    // Récupérer les achats récents des formations de l'utilisateur connecté
+    const { data, error } = await supabase
+      .from('purchased_formations')
+      .select(`
+        id,
+        purchased_at,
+        user_id,
+        formations!inner(
+          title,
+          user_id
+        )
+      `)
+      .eq('formations.user_id', user.value.id)
+      .eq('status', 'active')
+      .order('purchased_at', { ascending: false })
+      .limit(10)
+
+    if (error) {
+      console.error('Erreur lors du chargement des achats:', error)
+      return
+    }
+
+    if (!data || data.length === 0) {
+      recentLearners.value = []
+      return
+    }
+
+    // Récupérer les profils des utilisateurs qui ont acheté
+    const userIds = [...new Set(data.map(purchase => purchase.user_id))]
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error('Erreur lors du chargement des profils:', profilesError)
+    }
+
+    // Créer un map des profils
+    const profilesMap = {}
+    if (profiles) {
+      profiles.forEach(profile => {
+        profilesMap[profile.id] = profile
+      })
+    }
+
+    // Transformer les données pour l'affichage
+    recentLearners.value = data.map(purchase => ({
+      id: purchase.id,
+      name: profilesMap[purchase.user_id]?.username || 'Utilisateur',
+      avatar_url: profilesMap[purchase.user_id]?.avatar_url || null,
+      formationTitle: purchase.formations.title,
+      purchasedAt: purchase.purchased_at
+    }))
+
+  } catch (error) {
+    console.error('Erreur lors du chargement des apprenants:', error)
+  }
+}
+
+async function fetchRecentReactions() {
+  if (!user.value) return
+  
+  try {
+    // Récupérer d'abord les posts de l'utilisateur connecté
+    const { data: userPosts, error: postsError } = await supabase
+      .from('posts')
+      .select('id, content')
+      .eq('user_id', user.value.id)
+      .order('created_at', { ascending: false })
+
+    if (postsError) {
+      console.error('Erreur lors du chargement des posts:', postsError)
+      return
+    }
+
+    if (!userPosts || userPosts.length === 0) {
+      recentReactions.value = []
+      return
+    }
+
+    const postIds = userPosts.map(post => post.id)
+
+    // Récupérer les réactions récentes sur ces posts (excluant l'auteur des posts)
+    const { data: reactions, error: reactionsError } = await supabase
+      .from('reactions')
+      .select('id, post_id, user_id, emoji, created_at')
+      .in('post_id', postIds)
+      .neq('user_id', user.value.id) // Exclure les réactions de l'utilisateur sur ses propres posts
+      .order('created_at', { ascending: false })
+      .limit(6)
+
+    if (reactionsError) {
+      console.error('Erreur lors du chargement des réactions:', reactionsError)
+      return
+    }
+
+    if (!reactions || reactions.length === 0) {
+      recentReactions.value = []
+      return
+    }
+
+    // Récupérer les profils des utilisateurs qui ont réagi
+    const userIds = [...new Set(reactions.map(reaction => reaction.user_id))]
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error('Erreur lors du chargement des profils:', profilesError)
+    }
+
+    // Créer un map des profils
+    const profilesMap = {}
+    if (profiles) {
+      profiles.forEach(profile => {
+        profilesMap[profile.id] = profile
+      })
+    }
+
+    // Créer un map des posts
+    const postsMap = {}
+    userPosts.forEach(post => {
+      postsMap[post.id] = post
+    })
+
+    // Transformer les données pour l'affichage
+    recentReactions.value = reactions.map(reaction => ({
+      id: reaction.id,
+      name: profilesMap[reaction.user_id]?.username || 'Utilisateur',
+      avatar_url: profilesMap[reaction.user_id]?.avatar_url || null,
+      emoji: reaction.emoji,
+      postContent: postsMap[reaction.post_id]?.content || 'votre poste',
+      reactedAt: reaction.created_at
+    }))
+
+  } catch (error) {
+    console.error('Erreur lors du chargement des réactions récentes:', error)
+  }
+}
+
 onMounted(async () => {
   // Récupère l'utilisateur connecté
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return
   user.value = session.user
+  
+  // Charge les apprenants récents
+  await fetchRecentLearners()
+  
+  // Charge les réactions récentes
+  await fetchRecentReactions()
+  
   // Charge les formations publiées du user
   const { data } = await supabase
     .from('formations')
@@ -194,6 +389,12 @@ onMounted(async () => {
     ...post,
     profile: profilesMap[post.user_id] || null
   }))
+  
+  // Charge les réactions pour tous les posts
+  if (posts && posts.length > 0) {
+    const postIds = posts.map(post => post.id)
+    await fetchPostReactions(postIds)
+  }
 })
 
 function openFileDialog() {
@@ -225,6 +426,7 @@ async function publishPost() {
   const post = {
     content: postContent.value,
     image_base64: postImage.value,
+    formation_id: selectedFormation.value ? selectedFormation.value.id : null,
     formation_title: selectedFormation.value ? selectedFormation.value.title : null,
     user_id: user.value.id,
     created_at: new Date().toISOString()
@@ -243,6 +445,8 @@ async function publishPost() {
     postImage.value = null
     postImagePreview.value = null
     selectedFormation.value = null
+    
+    // Pas besoin de recharger les réactions car un nouveau post n'en a pas encore
   }
 }
 </script>
@@ -356,11 +560,16 @@ async function publishPost() {
   font-weight: bold;
   margin-bottom: 1rem;
 }
-.sidebar-header a {
+.sidebar-header a, .voir-tout-link {
   color: #7376ff;
   font-weight: 500;
   font-size: 0.98rem;
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.sidebar-header a:hover, .voir-tout-link:hover {
+  color: #5d60d6;
 }
 .sidebar-block ul {
   list-style: none;
@@ -369,9 +578,42 @@ async function publishPost() {
 }
 .sidebar-block li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.8rem;
   margin-bottom: 1rem;
+}
+
+.sidebar-block .avatar {
+  width: 40px;
+  height: 40px;
+  margin-right: 0;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #d1d5db;
+}
+
+.sidebar-block .avatar-placeholder {
+  font-size: 1rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #7376ff;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+}
+
+.sidebar-block .profile-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
 }
 .name {
   font-weight: 600;
@@ -379,6 +621,30 @@ async function publishPost() {
 .info {
   font-size: 0.85rem;
   color: #6b7280;
+}
+
+.no-learners {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.no-learners-text {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0;
+  font-style: italic;
+}
+
+.no-reactions-sidebar {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.no-reactions-text {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0;
+  font-style: italic;
 }
 
 .main-content {
@@ -412,6 +678,18 @@ async function publishPost() {
   overflow: hidden;
   margin-right: 1rem;
 }
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #7376ff;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
 .profile-image {
   width: 100%;
   height: 100%;
@@ -441,13 +719,37 @@ async function publishPost() {
   font-size: 0.875rem;
   color: #6b7280;
 }
-.reactions .icon {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-  background: #d1d5db;
-  border-radius: 50%;
-  margin-right: 0.3rem;
+.reaction-bubbles {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.reaction-bubble {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f3f4f6;
+  border-radius: 16px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.reaction-emoji {
+  font-size: 16px;
+}
+
+.reaction-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.no-reactions {
+  color: #9ca3af;
+  font-size: 14px;
+  font-style: italic;
 }
 .share {
   background: #f3f4f6;

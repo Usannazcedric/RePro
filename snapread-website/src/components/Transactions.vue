@@ -29,8 +29,14 @@
         </div>
       </div>
 
+      <!-- État de chargement -->
+      <div v-if="loading" class="loading-state">
+        <div class="loader"></div>
+        <p class="loading-message">Chargement des transactions...</p>
+      </div>
+
       <!-- Liste des transactions -->
-      <div class="transactions-list">
+      <div v-else class="transactions-list">
         <div 
           v-for="transaction in filteredTransactions" 
           :key="transaction.id"
@@ -40,6 +46,9 @@
             <div class="transaction-amount">
               <span class="amount">{{ transaction.amount }}</span>
               <span class="type">{{ transaction.type }}</span>
+            </div>
+            <div class="transaction-formation" v-if="transaction.formationTitle">
+              Formation: {{ transaction.formationTitle }}
             </div>
             <div class="transaction-date">
               Date: {{ transaction.date }}
@@ -58,45 +67,36 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- État vide -->
-      <div v-if="filteredTransactions.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#9ca3af" stroke-width="2"/>
-            <path d="M9 12L11 14L15 10" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <!-- État vide -->
+        <div v-if="filteredTransactions.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#9ca3af" stroke-width="2"/>
+              <path d="M9 12L11 14L15 10" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p class="empty-message">Aucune transaction pour le moment</p>
         </div>
-        <p class="empty-message">Aucune transaction pour le moment</p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { supabase } from '../supabase'
+
 export default {
   name: 'Transactions',
   data() {
     return {
       activeFilter: 'tout',
-      transactions: [
-        {
-          id: 1,
-          amount: '25.36€',
-          type: 'Achat',
-          date: '27/01/2025 16:10:31',
-          status: 'Confirmé'
-        },
-        {
-          id: 2,
-          amount: '25.36€',
-          type: 'Achat',
-          date: '24/01/2025 13:22:12',
-          status: 'Confirmé'
-        }
-      ]
+      transactions: [],
+      loading: true
     }
+  },
+  async mounted() {
+    await this.fetchTransactions()
   },
   computed: {
     filteredTransactions() {
@@ -109,9 +109,84 @@ export default {
     }
   },
   methods: {
+    async fetchTransactions() {
+      try {
+        this.loading = true
+        
+        // Récupérer l'utilisateur connecté
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !session?.user) {
+          console.error('Utilisateur non connecté')
+          this.transactions = []
+          return
+        }
+
+        // Récupérer tous les achats des formations de cet utilisateur
+        const { data, error } = await supabase
+          .from('purchased_formations')
+          .select(`
+            id,
+            price,
+            purchased_at,
+            status,
+            formations!inner(
+              title,
+              user_id
+            )
+          `)
+          .eq('formations.user_id', session.user.id)
+          .order('purchased_at', { ascending: false })
+
+        if (error) {
+          console.error('Erreur lors du chargement des transactions:', error)
+          this.transactions = []
+          return
+        }
+
+        // Transformer les données pour le format attendu
+        this.transactions = (data || []).map(purchase => ({
+          id: purchase.id,
+          amount: `${purchase.price.toFixed(2)}€`,
+          type: 'Achat',
+          date: this.formatDate(purchase.purchased_at),
+          status: this.getStatusLabel(purchase.status),
+          formationTitle: purchase.formations.title
+        }))
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des transactions:', error)
+        this.transactions = []
+      } finally {
+        this.loading = false
+      }
+    },
+
+    formatDate(dateString) {
+      const date = new Date(dateString)
+      return date.toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    },
+
+    getStatusLabel(status) {
+      const statusMap = {
+        'active': 'Confirmé',
+        'cancelled': 'Annulé',
+        'refunded': 'Remboursé'
+      }
+      return statusMap[status] || 'Inconnu'
+    },
+
     setActiveFilter(filter) {
       this.activeFilter = filter
     },
+
     viewTransaction(transaction) {
       console.log('Voir transaction:', transaction)
       // Logique pour voir les détails de la transaction
@@ -225,6 +300,13 @@ export default {
   font-weight: 500;
 }
 
+.transaction-formation {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
 .transaction-date {
   font-size: 0.8125rem;
   color: #9ca3af;
@@ -248,12 +330,12 @@ export default {
   color: #166534;
 }
 
-.status-badge.en-attente {
+.status-badge.annulé {
   background: #fef3c7;
   color: #92400e;
 }
 
-.status-badge.échoué {
+.status-badge.remboursé {
   background: #fee2e2;
   color: #dc2626;
 }
@@ -280,6 +362,37 @@ export default {
   background: #f3f4f6;
   color: #374151;
   border-color: #d1d5db;
+}
+
+/* État de chargement */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1rem;
+}
+
+.loader {
+  border: 3px solid #f3f4f6;
+  border-top-color: #7376FF;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-message {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
 }
 
 /* État vide */

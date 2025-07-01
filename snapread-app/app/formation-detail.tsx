@@ -31,6 +31,7 @@ interface Formation {
   quiz_count: number;
   chapter_count: number;
   certificate_available: boolean;
+  price?: number;
   formation_data?: {
     coverImageUrl?: string;
     chapters?: Array<{
@@ -113,7 +114,7 @@ export default function FormationDetailScreen() {
           {
             user_id: user.id,
             formation_id: id,
-            price: 0.00, // Gratuit pour le moment
+            price: formation.price || 49.99,
             status: 'active'
           }
         ]);
@@ -324,6 +325,12 @@ export default function FormationDetailScreen() {
                   </View>
                 </View>
 
+                <View style={styles.priceSection}>
+                  <Text style={styles.priceText}>
+                    Prix: {formation.price ? `${formation.price.toFixed(2)}€` : '49.99€'}
+                  </Text>
+                </View>
+
                 <View style={styles.stepsContainer}>
                   <StepsIcon 
                     width={width - 190} 
@@ -353,7 +360,7 @@ export default function FormationDetailScreen() {
                     disabled={purchasing}
                   >
                     <Text style={styles.purchaseButtonText}>
-                      {purchasing ? 'Achat en cours...' : 'Acheter la formation'}
+                      {purchasing ? 'Achat en cours...' : `Acheter pour ${formation.price ? `${formation.price.toFixed(2)}€` : '49.99€'}`}
                     </Text>
                     <Text style={styles.purchaseSubtext}>Certificat inclus dans SnapRead</Text>
                   </TouchableOpacity>
@@ -529,6 +536,15 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontWeight: '600',
     fontFamily: getFontFamily('semiBold'),
+  },
+  priceSection: {
+    marginBottom: 16,
+  },
+  priceText: {
+    fontSize: 18,
+    color: '#7376FF',
+    fontWeight: 'bold',
+    fontFamily: getFontFamily('bold'),
   },
   stepsContainer: {
     marginVertical: 16,
