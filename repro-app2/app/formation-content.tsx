@@ -56,6 +56,7 @@ export default function FormationContentScreen() {
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
   const [userProgress, setUserProgress] = useState<any[]>([]);
+  const [authorInfo, setAuthorInfo] = useState<any>(null);
 
   useEffect(() => {
     fetchFormation();
@@ -78,6 +79,19 @@ export default function FormationContentScreen() {
 
       if (error) throw error;
       setFormation(data);
+
+      // Récupérer les informations de l'auteur
+      if (data.user_id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('username, full_name')
+          .eq('id', data.user_id)
+          .single();
+
+        if (!profileError && profileData) {
+          setAuthorInfo(profileData);
+        }
+      }
     } catch (error) {
       console.error('Erreur lors du chargement de la formation:', error);
     } finally {
@@ -281,8 +295,10 @@ export default function FormationContentScreen() {
         </View>
 
         <ScrollView style={styles.container}>
-          <Text style={styles.mainTitle}>Python</Text>
-          <Text style={styles.subtitle}>Introduction à la programmation</Text>
+          <Text style={styles.mainTitle}>{formation?.title || 'Formation'}</Text>
+          <Text style={styles.subtitle}>
+            Par {authorInfo?.username || authorInfo?.full_name || 'Auteur inconnu'}
+          </Text>
 
           <View style={styles.tabsContainer}>
             <TouchableOpacity style={[styles.tab, styles.activeTab]}>
@@ -395,7 +411,6 @@ export default function FormationContentScreen() {
             );
           })}
 
-          {/* Section Certificat */}
           <View style={styles.certificateSection}>
             <TouchableOpacity 
               style={[
@@ -405,11 +420,13 @@ export default function FormationContentScreen() {
               disabled={!isFormationCompleted(chapters)}
               onPress={() => {
                 if (isFormationCompleted(chapters)) {
-                  Alert.alert(
-                    'Félicitations !', 
-                    'Vous avez terminé toute la formation. Votre certificat sera bientôt disponible !',
-                    [{ text: 'OK' }]
-                  );
+                  router.push({
+                    pathname: '/certificate-result',
+                    params: {
+                      formationId: id,
+                      formationTitle: formation?.title || 'Formation'
+                    }
+                  } as any);
                 }
               }}
             >
@@ -432,11 +449,9 @@ export default function FormationContentScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Espace pour éviter lejhg chevauchement avec la navbar */}
           <View style={styles.bottomSpacer} />
         </ScrollView>
         
-        {/* Navbar globale */}
         <BottomNavbar />
       </SafeAreaView>
     </>
