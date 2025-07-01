@@ -19,7 +19,7 @@ import CertifIcon from '../assets/images/certif.svg';
 import StepsIcon from '../assets/images/steps.svg';
 import TradIcon from '../assets/images/trad.svg';
 import ArrowIcon from '../assets/images/arrow.svg';
-import CustomTabBar from '../components/CustomTabBar';
+import BottomNavbar from '../components/BottomNavbar';
 
 const { width } = Dimensions.get('window');
 
@@ -362,7 +362,9 @@ export default function FormationDetailScreen() {
             </View>
           </ScrollView>
         </View>
-        <CustomTabBar />
+        
+        {/* Navbar globale */}
+        <BottomNavbar />
       </SafeAreaView>
     </>
   );

@@ -52,6 +52,10 @@ export default function RootLayout() {
         <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="boutique" options={{ headerShown: false }} />
+        <Stack.Screen name="formation-detail" options={{ headerShown: false }} />
+        <Stack.Screen name="formation-content" options={{ headerShown: false }} />
+        <Stack.Screen name="course-content" options={{ headerShown: false }} />
+        <Stack.Screen name="quiz-content" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>

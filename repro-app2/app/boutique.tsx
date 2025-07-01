@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { getFontFamily } from '../constants/Fonts';
-import CustomTabBar from '../components/CustomTabBar';
+import BottomNavbar from '../components/BottomNavbar';
 
 const { width } = Dimensions.get('window');
 
@@ -279,7 +279,9 @@ export default function BoutiqueScreen() {
           </View>
         )}
       </ScrollView>
-      <CustomTabBar />
+      
+      {/* Navbar globale */}
+      <BottomNavbar />
     </SafeAreaView>
   );
 }

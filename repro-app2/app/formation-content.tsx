@@ -6,14 +6,18 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { getFontFamily } from '../constants/Fonts';
 import ArrowIcon from '../assets/images/arrow.svg';
 import FlecheIcon from '../assets/images/fleche.svg';
-import CustomTabBar from '../components/CustomTabBar';
+import CheckVertIcon from '../assets/images/checkvert.svg';
+import LockIcon from '../assets/images/lockgood.svg';
+import TrophyWhiteIcon from '../assets/images/trophywhite.svg';
+import BottomNavbar from '../components/BottomNavbar';
 
 interface Chapter {
   id: string;
@@ -51,10 +55,18 @@ export default function FormationContentScreen() {
   const { id } = useLocalSearchParams();
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userProgress, setUserProgress] = useState<any[]>([]);
 
   useEffect(() => {
     fetchFormation();
   }, []);
+
+  // Rafraîchir la progression quand on revient sur la page
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserProgress();
+    }, [])
+  );
 
   const fetchFormation = async () => {
     try {
@@ -71,6 +83,126 @@ export default function FormationContentScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchUserProgress = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('formation_id', id);
+
+      if (error) {
+        console.error('Erreur lors du chargement de la progression:', error);
+        return;
+      }
+
+      setUserProgress(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement de la progression:', error);
+    }
+  };
+
+  // Vérifier si un élément est complété
+  const isCompleted = (chapterId: string, itemId: string, type: 'course' | 'quiz') => {
+    return userProgress.some(progress => 
+      String(progress.chapter_id) === String(chapterId) &&
+      (type === 'course' ? String(progress.course_id) === String(itemId) : String(progress.quiz_id) === String(itemId)) &&
+      progress.type === type &&
+      progress.completed === true
+    );
+  };
+
+  // Vérifier si tous les cours d'un chapitre sont complétés
+  const areAllCoursesCompleted = (chapterId: string, courses: any[]) => {
+    return courses.every(course => isCompleted(chapterId, course.id, 'course'));
+  };
+
+  // Vérifier si le chapitre précédent est complété
+  const isPreviousChapterCompleted = (currentChapterIndex: number, chapters: any[]) => {
+    if (currentChapterIndex === 0) return true; // Premier chapitre toujours accessible
+    
+    const previousChapter = chapters[currentChapterIndex - 1];
+    const previousCoursesCompleted = areAllCoursesCompleted(previousChapter.id, previousChapter.courses || []);
+    const previousQuizCompleted = (previousChapter.quizzes || []).every((quiz: any) => 
+      isCompleted(previousChapter.id, quiz.id, 'quiz')
+    );
+    
+    return previousCoursesCompleted && previousQuizCompleted;
+  };
+
+  // Vérifier si toute la formation est complétée
+  const isFormationCompleted = (chapters: any[]) => {
+    return chapters.every(chapter => {
+      const coursesCompleted = areAllCoursesCompleted(chapter.id, chapter.courses || []);
+      const quizzesCompleted = (chapter.quizzes || []).every((quiz: any) => 
+        isCompleted(chapter.id, quiz.id, 'quiz')
+      );
+      return coursesCompleted && quizzesCompleted;
+    });
+  };
+
+  // Gérer le clic sur un cours
+  const handleCourseClick = (course: any, chapter: any, chapterIndex: number, chapters: any[]) => {
+    // Vérifier si le chapitre précédent est complété
+    if (!isPreviousChapterCompleted(chapterIndex, chapters)) {
+      Alert.alert(
+        'Chapitre verrouillé', 
+        'Vous devez compléter le chapitre précédent avant d\'accéder à celui-ci.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Navigation normale
+    router.push({
+      pathname: '/course-content',
+      params: {
+        formationId: id,
+        chapterId: chapter.id,
+        courseId: course.id
+      }
+    } as any);
+  };
+
+  // Gérer le clic sur un quiz
+  const handleQuizClick = (quiz: any, chapter: any, chapterIndex: number, chapters: any[]) => {
+    // Vérifier si le chapitre précédent est complété
+    if (!isPreviousChapterCompleted(chapterIndex, chapters)) {
+      Alert.alert(
+        'Chapitre verrouillé', 
+        'Vous devez compléter le chapitre précédent avant d\'accéder à celui-ci.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Vérifier si tous les cours du chapitre actuel sont complétés
+    if (!areAllCoursesCompleted(chapter.id, chapter.courses || [])) {
+      Alert.alert(
+        'Cours requis', 
+        'Vous devez lire tous les cours de ce chapitre avant de passer au quiz.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Navigation normale
+    router.push({
+      pathname: '/quiz-content',
+      params: {
+        formationId: id,
+        chapterId: chapter.id,
+        quizId: quiz.id
+      }
+    } as any);
   };
 
   const getChapters = (): Chapter[] => {
@@ -188,13 +320,32 @@ export default function FormationContentScreen() {
                         <Text style={styles.courseMeta}>Cours • {course.duration}</Text>
                       </View>
                     </View>
-                    <TouchableOpacity style={styles.courseButton} onPress={() => {/* navigation */}}>
-                      <FlecheIcon 
-                        width={150} 
-                        height={150} 
-                        color="#374151" 
-                        style={{ marginTop: 55 }}
-                      />
+                    <TouchableOpacity 
+                      style={styles.courseButton} 
+                      onPress={() => handleCourseClick(course, chapter, chapterIndex, chapters)}
+                    >
+                      {isCompleted(chapter.id, course.id, 'course') ? (
+                        <CheckVertIcon 
+                          width={30} 
+                          height={30} 
+                          color="#10B981" 
+                          style={{ marginTop: 5 }}
+                        />
+                      ) : !isPreviousChapterCompleted(chapterIndex, chapters) ? (
+                        <LockIcon 
+                          width={30} 
+                          height={30} 
+                          color="#9CA3AF" 
+                          style={{ marginTop: 5 }}
+                        />
+                      ) : (
+                        <FlecheIcon 
+                          width={150} 
+                          height={150} 
+                          color="#374151" 
+                          style={{ marginTop: 55 }}
+                        />
+                      )}
                     </TouchableOpacity>
                   </TouchableOpacity>
                 ))}
@@ -210,13 +361,32 @@ export default function FormationContentScreen() {
                           <Text style={styles.quizMeta}>Quiz • {quiz.question}</Text>
                         </View>
                       </View>
-                      <TouchableOpacity style={styles.quizButton} onPress={() => {/* navigation */}}>
-                        <FlecheIcon 
-                          width={150} 
-                          height={150} 
-                          color="#374151" 
-                          style={{ marginTop: 55 }}
-                        />
+                      <TouchableOpacity 
+                        style={styles.quizButton} 
+                        onPress={() => handleQuizClick(quiz, chapter, chapterIndex, chapters)}
+                      >
+                        {isCompleted(chapter.id, quiz.id, 'quiz') ? (
+                          <CheckVertIcon 
+                            width={30} 
+                            height={30} 
+                            color="#10B981" 
+                            style={{ marginTop: 5 }}
+                          />
+                        ) : !isPreviousChapterCompleted(chapterIndex, chapters) || !areAllCoursesCompleted(chapter.id, chapter.courses || []) ? (
+                          <LockIcon 
+                            width={30} 
+                            height={30} 
+                            color="#9CA3AF" 
+                            style={{ marginTop: 5 }}
+                          />
+                        ) : (
+                          <FlecheIcon 
+                            width={150} 
+                            height={150} 
+                            color="#374151" 
+                            style={{ marginTop: 55 }}
+                          />
+                        )}
                       </TouchableOpacity>
                     </TouchableOpacity>
                   );
@@ -224,8 +394,50 @@ export default function FormationContentScreen() {
               </View>
             );
           })}
+
+          {/* Section Certificat */}
+          <View style={styles.certificateSection}>
+            <TouchableOpacity 
+              style={[
+                styles.certificateButton,
+                { opacity: isFormationCompleted(chapters) ? 1 : 0.5 }
+              ]}
+              disabled={!isFormationCompleted(chapters)}
+              onPress={() => {
+                if (isFormationCompleted(chapters)) {
+                  Alert.alert(
+                    'Félicitations !', 
+                    'Vous avez terminé toute la formation. Votre certificat sera bientôt disponible !',
+                    [{ text: 'OK' }]
+                  );
+                }
+              }}
+            >
+              <View style={styles.certificateButtonContent}>
+                <TrophyWhiteIcon 
+                  width={24} 
+                  height={24} 
+                  color="#FFFFFF"
+                  style={styles.trophyIcon}
+                />
+                <Text style={styles.certificateButtonText}>
+                  Obtenir mon certificat
+                </Text>
+              </View>
+              {!isFormationCompleted(chapters) && (
+                <Text style={styles.certificateSubtext}>
+                  Complétez tous les chapitres pour débloquer
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Espace pour éviter le chevauchement avec la navbar */}
+          <View style={styles.bottomSpacer} />
         </ScrollView>
-        <CustomTabBar />
+        
+        {/* Navbar globale */}
+        <BottomNavbar />
       </SafeAreaView>
     </>
   );
@@ -423,5 +635,44 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  certificateSection: {
+    marginTop: 40,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+  },
+  certificateButton: {
+    backgroundColor: '#7376FF',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  certificateButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trophyIcon: {
+    marginRight: 8,
+  },
+  certificateButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    fontFamily: getFontFamily('bold'),
+  },
+  certificateSubtext: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
+    fontFamily: getFontFamily('regular'),
+  },
+  bottomSpacer: {
+    height: 80,
   },
 });

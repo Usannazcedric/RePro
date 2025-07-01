@@ -105,11 +105,10 @@ export default function TabTwoScreen() {
   const getFormationProgress = (formation: PurchasedFormation) => {
     if (!formation.formations) return { currentChapter: 1, totalChapters: 1, coursesFollowed: 0, quizzesCompleted: 0 };
     
-    // Pour le moment, on simule un progrès
     const chapterCount = formation.formations.chapter_count || 1;
     const currentChapter = Math.floor(Math.random() * chapterCount) + 1;
     
-    // Calculer les cours suivis et quiz réussis (simulation)
+
     const totalCourses = formation.formations.formation_data?.chapters?.reduce((total, chapter) => {
       return total + (chapter.courses?.length || 0);
     }, 0) || 10;
@@ -118,8 +117,8 @@ export default function TabTwoScreen() {
       return total + (chapter.quizzes?.length || 0);
     }, 0) || formation.formations.quiz_count || 3;
     
-    const coursesFollowed = Math.floor(totalCourses * 0.7); // 70% des cours suivis
-    const quizzesCompleted = Math.floor(totalQuizzes * 0.6); // 60% des quiz réussis
+    const coursesFollowed = Math.floor(totalCourses * 0.7); 
+    const quizzesCompleted = Math.floor(totalQuizzes * 0.6);
     
     return {
       currentChapter,
@@ -222,7 +221,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#7376FF',
     fontFamily: getFontFamily('bold'),
   },
   boutiqueButton: {
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 8,
     gap: 8,
     shadowColor: '#000',
     shadowOpacity: 0.1,
