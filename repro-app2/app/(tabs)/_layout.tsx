@@ -3,27 +3,24 @@ import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { HomeIcon, FormationsIcon, SuccessIcon, SettingsIcon } from '@/components/TabIcons';
 
 function TabBarBackground() {
   return <View style={styles.tabBarBackground} />;
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        tabBarInactiveTintColor: '#B0B0B0',
+        tabBarActiveTintColor: '#7376FF', // Couleur active (purple)
+        tabBarInactiveTintColor: '#C9CAFF', // Couleur inactive (gris-purple)
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontSize: 12,
-          marginTop: 2, 
+          marginTop: 2,
+          fontWeight: '500',
         },
         tabBarItemStyle: {
           paddingTop: 2,
@@ -50,28 +47,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Accueil',
-          tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <HomeIcon focused={focused} size={24} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Formations',
-          tabBarIcon: ({ color }) => <IconSymbol name="book.fill" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <FormationsIcon focused={focused} size={24} />,
         }}
       />
       <Tabs.Screen
         name="success"
         options={{
           title: 'Succès',
-          tabBarIcon: ({ color }) => <IconSymbol name="trophy.fill" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <SuccessIcon focused={focused} size={24} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Paramètres',
-          tabBarIcon: ({ color }) => <IconSymbol name="gearshape.fill" size={24} color={color} />,
+          tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} size={24} />,
         }}
       />
       <Tabs.Screen
