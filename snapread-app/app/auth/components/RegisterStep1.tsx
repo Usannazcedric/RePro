@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+// @ts-ignore
 import { useRouter } from 'expo-router';
 
 interface RegisterStep1Props {
@@ -8,10 +9,10 @@ interface RegisterStep1Props {
 
 export default function RegisterStep1({ onNext }: RegisterStep1Props) {
     const router = useRouter();
-    const [username, setUsername] = useState('TestUser');
-    const [email, setEmail] = useState('test@example.com');
-    const [password, setPassword] = useState('password123');
-    const [confirmPassword, setConfirmPassword] = useState('password123');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [usernameFocused, setUsernameFocused] = useState(false);
     const [emailFocused, setEmailFocused] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);

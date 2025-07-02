@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   },
   routineTitle: {
     fontWeight: 'bold',
-    color: '#0B3C83',
+    color: '#6366F1',
     marginBottom: 4,
   },
   routineSubtext: {

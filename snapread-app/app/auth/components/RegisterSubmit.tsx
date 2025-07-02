@@ -26,6 +26,11 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
+        options: {
+          data: {
+            username: userData.username
+          }
+        }
       });
 
       if (authError) {
@@ -46,6 +51,21 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
         email: authData.user.email,
         created_at: authData.user.created_at
       });
+
+      // Attendre que la session soit bien établie
+      let sessionRetries = 0;
+      let session = null;
+      while (sessionRetries < 5 && !session) {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession) {
+          session = currentSession;
+          break;
+        }
+        sessionRetries++;
+        await new Promise(resolve => setTimeout(resolve, 500)); // Attendre 500ms
+      }
+      
+      console.log('🔐 Session après inscription:', session ? 'Active' : 'Inactive', `(essais: ${sessionRetries + 1})`);
 
       // Préparer les données du profil
       const profileData = {
@@ -72,9 +92,36 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
         return;
       }
 
+      console.log('✅ Profil créé avec succès');
+      
       onSubmit();
-      Alert.alert('Inscription réussie', 'Votre inscription a bien été prise en compte ! Vous pouvez maintenant vous connecter.');
-      router.replace('/auth');
+      
+      // Si la session est active, rediriger vers l'accueil, sinon vers la connexion
+      if (session) {
+        console.log('🎉 Redirection vers l\'accueil avec session active');
+        Alert.alert('Inscription réussie', 'Bienvenue dans SnapRead !', [
+          {
+            text: 'Commencer',
+            onPress: () => {
+              setTimeout(() => {
+                router.replace('/(tabs)');
+              }, 100);
+            }
+          }
+        ]);
+      } else {
+        console.log('⚠️ Session non disponible, redirection vers connexion');
+        Alert.alert('Inscription réussie', 'Votre compte a été créé ! Veuillez vous connecter pour continuer.', [
+          {
+            text: 'Se connecter',
+            onPress: () => {
+              setTimeout(() => {
+                router.replace('/auth');
+              }, 100);
+            }
+          }
+        ]);
+      }
     } catch (error: any) {
       
       Alert.alert('Erreur', 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.');
@@ -113,7 +160,7 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
           ) : (
             <>
               <TouchableOpacity style={styles.startButton} onPress={handleSubmit}>
-                <Text style={styles.startButtonText}>Commencer à se former</Text>
+                <Text style={styles.startButtonText}>Accéder à mon compte</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.backButton} onPress={onPrev}>
                 <Text style={styles.backButtonText}>Retour</Text>

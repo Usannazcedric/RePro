@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+// @ts-ignore
 import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { Fonts } from '../constants/Fonts';
+import BottomNavbar from '../components/BottomNavbar';
 
 // Import des icônes
 import LoupeIcon from '../assets/images/loupe.svg';
@@ -161,7 +163,7 @@ export default function HistoryScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6366F1" />
-          <Text style={styles.loadingText}>Chargement de l'historique...</Text>
+          <Text style={styles.loadingText}>Chargement de l&apos;historique...</Text>
         </View>
       </SafeAreaView>
     );
@@ -229,21 +231,38 @@ export default function HistoryScreen() {
             </View>
           ) : (
             filteredHistory.map((item) => (
-              <View key={item.id} style={styles.quizCard}>
+              <TouchableOpacity 
+                key={item.id} 
+                style={styles.quizCard}
+                activeOpacity={0.7}
+                onPress={() => router.push({
+                  pathname: '/quiz-content',
+                  params: {
+                    formationId: item.formation_id,
+                    chapterId: item.chapter_id,
+                    quizId: item.quiz_id,
+                    replayMode: 'true'
+                  }
+                })}
+              >
                 <View style={styles.quizHeader}>
                   <Text style={styles.quizBadge}>{getThemeBadge(item.formation_theme)}</Text>
                 </View>
                 <Text style={styles.quizSubject}>{item.formation_title}</Text>
                 <Text style={styles.quizChapter}>{formatChapterName(item.chapter_title, item.formation_title)}</Text>
                 <View style={styles.quizFooter}>
-                  <Text style={styles.quizScore}>Quiz • {Math.round((item.score / 100) * item.total_questions)}/{item.total_questions}</Text>
-                  <Text style={styles.successStatus}>RÉUSSI</Text>
+                  <Text style={styles.quizScore}>Quiz • 1/1</Text>
+                  <View style={styles.statusContainer}>
+                    <Text style={styles.successStatus}>RÉUSSI</Text>
+                    <Text style={styles.replayHint}>Appuyez pour rejouer</Text>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </ScrollView>
       </SafeAreaView>
+      <BottomNavbar />
     </>
   );
 }
@@ -265,7 +284,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   header: {
     flexDirection: 'column',
@@ -411,6 +430,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     fontFamily: Fonts.regular,
+  },
+  replayHint: {
+    color: '#000000',
+    fontSize: 12,
+    fontStyle: 'italic',
+    fontFamily: Fonts.regular,
+    marginTop: 2,
+  },
+  statusContainer: {
+    alignItems: 'flex-end',
   },
   emptyState: {
     alignItems: 'center',

@@ -40,7 +40,7 @@ interface PurchasedFormation {
 }
 
 export default function ProfileScreen() {
-  // @ts-ignore
+
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -49,8 +49,8 @@ export default function ProfileScreen() {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [purchasedFormations, setPurchasedFormations] = useState<PurchasedFormation[]>([]);
+  const [completedFormations, setCompletedFormations] = useState<any[]>([]);
   
-  // États pour le mode édition
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editUsername, setEditUsername] = useState('');
@@ -58,13 +58,11 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // États pour le mode formation
   const [isViewingFormation, setIsViewingFormation] = useState(false);
   const [selectedFormation, setSelectedFormation] = useState<any>(null);
   const [formationPosts, setFormationPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   
-  // États pour les réactions
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [postReactions, setPostReactions] = useState<{[key: string]: any[]}>({});
@@ -81,6 +79,7 @@ export default function ProfileScreen() {
           id,
           formation_id,
           purchased_at,
+          is_completed,
           formations (
             id,
             title,
@@ -98,6 +97,14 @@ export default function ProfileScreen() {
       }
 
       setPurchasedFormations((data as any) || []);
+      
+      const completed = (data || []).filter((formation: any) => {
+        return formation.is_completed === true;
+      }).map((formation: any) => ({
+        theme: formation.formations?.theme
+      }));
+      
+      setCompletedFormations(completed.slice(0, 3));
     } catch (error) {
       console.error('Erreur lors du chargement des formations:', error);
     }
@@ -621,6 +628,23 @@ export default function ProfileScreen() {
     return reactions.some(reaction => reaction.user_id === user?.id);
   };
 
+  const getThemeColor = (theme: string) => {
+    const colors: Record<string, string> = {
+      'Code': '#3B5BA5',
+      'Design': '#DA8023',
+      'Science': '#2D6F65',
+      'Biologie': '#8B4513',
+      'Chimie': '#FF6B35',
+      'Physique': '#6A5ACD',
+      'Mathématiques': '#DC143C',
+      'Informatique': '#20B2AA',
+      'Programmation': '#3B5BA5',
+      'Placement avancé (AP)': '#8B4513',
+      'Arts et design': '#DA8023',
+    };
+    return colors[theme] || '#7376FF';
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -760,7 +784,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               
               <Text style={styles.profileName}>{profile?.username || 'Alex Park'}</Text>
-              <Text style={styles.profileLevel}>Niveau 7</Text>
+              <Text style={styles.profileLevel}>Niveau 1</Text>
             </>
           )}
         </View>
@@ -880,28 +904,70 @@ export default function ProfileScreen() {
                   <Text style={styles.sectionTitle}>Vos statistiques</Text>
                   
                   <View style={styles.statsContent}>
-                    {/* Graphique circulaire */}
-                    <View style={styles.chartContainer}>
-                      <View style={styles.circularChart}>
-                        <Text style={styles.chartLabel}>Cours suivis</Text>
+                    {completedFormations.length === 0 ? (
+                      // Aucune formation terminée
+                      <View style={styles.noStatsContainer}>
+                        <View style={styles.emptyCircle}>
+                          <Text style={styles.emptyCircleText}>0</Text>
+                        </View>
+                        <Text style={styles.noStatsText}>Finissez votre première formation</Text>
                       </View>
-                    </View>
+                    ) : (
+                      <>
+                        {/* Graphique circulaire */}
+                        <View style={styles.chartContainer}>
+                          <View style={[
+                            styles.circularChart,
+                            completedFormations.length === 1 && { borderColor: getThemeColor(completedFormations[0].theme) },
+                            completedFormations.length === 2 && styles.twoPartsChart,
+                            completedFormations.length >= 3 && styles.threePartsChart,
+                          ]}>
+                            {completedFormations.length === 2 && (
+                              <>
+                                <View style={[
+                                  styles.halfCircle,
+                                  { borderColor: getThemeColor(completedFormations[0].theme) }
+                                ]} />
+                                <View style={[
+                                  styles.halfCircle,
+                                  styles.secondHalf,
+                                  { borderColor: getThemeColor(completedFormations[1].theme) }
+                                ]} />
+                              </>
+                            )}
+                            {completedFormations.length >= 3 && (
+                              <>
+                                <View style={[
+                                  styles.thirdCircle,
+                                  { borderColor: getThemeColor(completedFormations[0].theme) }
+                                ]} />
+                                <View style={[
+                                  styles.thirdCircle,
+                                  styles.secondThird,
+                                  { borderColor: getThemeColor(completedFormations[1].theme) }
+                                ]} />
+                                <View style={[
+                                  styles.thirdCircle,
+                                  styles.lastThird,
+                                  { borderColor: getThemeColor(completedFormations[2].theme) }
+                                ]} />
+                              </>
+                            )}
+                            <Text style={styles.chartLabel}>Cours suivis</Text>
+                          </View>
+                        </View>
 
-                    {/* Légendes */}
-                    <View style={styles.legendContainer}>
-                      <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: '#FFA500' }]} />
-                        <Text style={styles.legendText}>React Native</Text>
-                      </View>
-                      <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: '#22C55E' }]} />
-                        <Text style={styles.legendText}>C++</Text>
-                      </View>
-                      <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: '#3B5BA5' }]} />
-                        <Text style={styles.legendText}>Python</Text>
-                      </View>
-                    </View>
+                        {/* Légendes */}
+                        <View style={styles.legendContainer}>
+                          {completedFormations.map((formation, index) => (
+                            <View key={index} style={styles.legendItem}>
+                              <View style={[styles.legendDot, { backgroundColor: getThemeColor(formation.theme) }]} />
+                              <Text style={styles.legendText}>{formation.theme}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </>
+                    )}
                   </View>
                 </View>
 
@@ -1374,17 +1440,50 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 8,
-    borderColor: '#7376FF',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f9ff',
+    backgroundColor: '#ffffff',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  halfCircle: {
+    position: 'absolute',
+    width: '100%',
+    height: '200%',
+    borderRadius: 60,
+    borderWidth: 8,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+    top: 0,
+    borderBottomWidth: 0,
+  },
+  secondHalf: {
+    transform: [{ rotate: '180deg' }],
+    top: '-100%',
+  },
+  thirdCircle: {
+    position: 'absolute',
+    width: '100%',
+    height: '200%',
+    borderRadius: 60,
+    borderWidth: 8,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+    top: 0,
+    borderBottomWidth: 0,
+  },
+  secondThird: {
+    transform: [{ rotate: '120deg' }],
+  },
+  lastThird: {
+    transform: [{ rotate: '240deg' }],
   },
   chartLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: '#666',
     textAlign: 'center',
+    zIndex: 1,
   },
   legendContainer: {
     flexDirection: 'row',
@@ -1612,47 +1711,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  reactionIcon: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#ddd',
-    marginRight: 4,
-  },
-  reactionText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-  },
-  shareButton: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  shareText: {
-    fontSize: 12,
-    color: '#7376FF',
-    fontWeight: '600',
-  },
-  noPostsContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  noPostsText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  noPostsSubtext: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-  },
-  
-  // Styles pour les réactions
   reactionBubble: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1752,5 +1810,79 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  noStatsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 8,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyCircleText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#9CA3AF',
+  },
+  noStatsText: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  twoPartsChart: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    position: 'relative',
+  },
+  threePartsChart: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    position: 'relative',
+  },
+  shareButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  shareText: {
+    fontSize: 12,
+    color: '#7376FF',
+    fontWeight: '600',
+  },
+  noPostsContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noPostsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  noPostsSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  reactionIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#ddd',
+    marginRight: 4,
+  },
+  reactionText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
   },
 });

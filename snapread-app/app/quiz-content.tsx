@@ -44,7 +44,7 @@ interface Formation {
 
 export default function QuizContentScreen() {
   const router = useRouter();
-  const { formationId, chapterId, quizId } = useLocalSearchParams();
+  const { formationId, chapterId, quizId, replayMode } = useLocalSearchParams();
   const [formation, setFormation] = useState<Formation | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [chapterTitle, setChapterTitle] = useState<string>('');
@@ -52,6 +52,8 @@ export default function QuizContentScreen() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [currentQuestionIndex] = useState(0); // Pour l'instant, toujours 0 car 1 seul quiz
   const [submitting, setSubmitting] = useState(false);
+
+  const isReplayMode = replayMode === 'true';
 
   useEffect(() => {
     fetchFormationAndQuiz();
@@ -168,13 +170,15 @@ export default function QuizContentScreen() {
       const isCorrect = selectedAnswer === quiz.correctAnswer;
       
       if (isCorrect) {
-        // Sauvegarder la progression en base
-        await saveQuizProgress();
+        // Sauvegarder la progression seulement si ce n'est pas en mode replay
+        if (!isReplayMode) {
+          await saveQuizProgress();
+        }
         
         // Quiz réussi, retour à la formation
         Alert.alert(
           'Bien joué !', 
-          'Bonne réponse !', 
+          isReplayMode ? 'Bonne réponse ! (Mode replay)' : 'Bonne réponse !', 
           [
             {
               text: 'OK',
@@ -188,7 +192,7 @@ export default function QuizContentScreen() {
         // Afficher l'alerte d'échec
         Alert.alert(
           'Mauvaise réponse', 
-          'Réessayez ! Vous pouvez reprendre le quiz.',
+          isReplayMode ? 'Réessayez ! (Mode replay)' : 'Réessayez ! Vous pouvez reprendre le quiz.',
           [
             {
               text: 'Réessayer',
@@ -295,7 +299,14 @@ export default function QuizContentScreen() {
 
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
           <Text style={styles.formationTitle}>{formation.title}</Text>
-          <Text style={styles.quizTitle}>{quiz.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.quizTitle}>{quiz.title}</Text>
+            {isReplayMode && (
+              <View style={styles.replayBadge}>
+                <Text style={styles.replayBadgeText}>REPLAY</Text>
+              </View>
+            )}
+          </View>
           
           {/* Barre de progression */}
           <View style={styles.progressSection}>
@@ -437,11 +448,29 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontFamily: getFontFamily('bold'),
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 12,
+  },
   quizTitle: {
     fontSize: 20,
     color: '#7376FF',
-    marginBottom: 24,
     fontFamily: getFontFamily('regular'),
+    flex: 1,
+  },
+  replayBadge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  replayBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+    fontFamily: getFontFamily('bold'),
   },
   progressSection: {
     marginBottom: 32,

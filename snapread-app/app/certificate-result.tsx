@@ -132,6 +132,19 @@ export default function CertificateResultScreen() {
 
       console.log('✅ Note sauvegardée avec succès:', reviewData);
       
+      // Marquer la formation comme terminée
+      const { error: completionError } = await supabase
+        .from('purchased_formations')
+        .update({ is_completed: true })
+        .eq('user_id', user.id)
+        .eq('formation_id', formationId);
+
+      if (completionError) {
+        console.error('Erreur lors de la mise à jour du statut de complétion:', completionError);
+        Alert.alert('Erreur', `Impossible de mettre à jour le statut de complétion: ${completionError.message}`);
+        return;
+      }
+      
       // Rediriger vers la page de certificat avec les paramètres nécessaires
       router.push({
         pathname: '/certificate-badge',

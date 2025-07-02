@@ -57,6 +57,7 @@ export default function FormationContentScreen() {
   const [loading, setLoading] = useState(true);
   const [userProgress, setUserProgress] = useState<any[]>([]);
   const [authorInfo, setAuthorInfo] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'formation' | 'statistics'>('formation');
 
   useEffect(() => {
     fetchFormation();
@@ -219,6 +220,51 @@ export default function FormationContentScreen() {
     } as any);
   };
 
+  // Calculer les statistiques
+  const calculateStatistics = () => {
+    const chapters = getChapters();
+    
+    // Compter le total d'éléments (cours + quiz)
+    let totalItems = 0;
+    let completedItems = 0;
+    
+    chapters.forEach(chapter => {
+      const courses = chapter.courses || [];
+      const quizzes = chapter.quizzes || [];
+      
+      totalItems += courses.length + quizzes.length;
+      
+      // Compter les éléments complétés
+      courses.forEach(course => {
+        if (isCompleted(chapter.id, course.id, 'course')) {
+          completedItems++;
+        }
+      });
+      
+      quizzes.forEach(quiz => {
+        if (isCompleted(chapter.id, quiz.id, 'quiz')) {
+          completedItems++;
+        }
+      });
+    });
+    
+    const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+    
+    return {
+      precision: 90, // Fake comme demandé
+      completion: completionPercentage,
+      winLossRatio: 75, // Fake comme demandé
+      bestTest: {
+        title: 'Chapitre Test - 1',
+        score: '09/10',
+        status: 'RÉUSSI',
+        date: '25/04/2025'
+      },
+      learningTime: '5:22min',
+      coursesCount: 4
+    };
+  };
+
   const getChapters = (): Chapter[] => {
     if (formation?.formation_data?.iaResult?.chapters) {
       return formation.formation_data.iaResult.chapters;
@@ -301,94 +347,60 @@ export default function FormationContentScreen() {
           </Text>
 
           <View style={styles.tabsContainer}>
-            <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-              <Text style={[styles.tabText, styles.activeTabText]}>Formation</Text>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'formation' && styles.activeTab]}
+              onPress={() => setActiveTab('formation')}
+            >
+              <Text style={[styles.tabText, activeTab === 'formation' && styles.activeTabText]}>Formation</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tab}>
-              <Text style={styles.tabText}>Statistiques</Text>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'statistics' && styles.activeTab]}
+              onPress={() => setActiveTab('statistics')}
+            >
+              <Text style={[styles.tabText, activeTab === 'statistics' && styles.activeTabText]}>Statistiques</Text>
             </TouchableOpacity>
           </View>
 
-          {chapters.map((chapter, chapterIndex) => {
-            const getRomanNumeral = (num: number) => {
-              const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-              return romanNumerals[num - 1] || num.toString();
-            };
+          {activeTab === 'formation' ? (
+            chapters.map((chapter, chapterIndex) => {
+              const getRomanNumeral = (num: number) => {
+                const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+                return romanNumerals[num - 1] || num.toString();
+              };
 
-            let itemCounter = chapterIndex === 0
-              ? 1
-              : chapters
-                  .slice(0, chapterIndex)
-                  .reduce((acc, ch) => acc + (ch.courses?.length || 0) + (ch.quizzes?.length || 0), 1);
+              let itemCounter = chapterIndex === 0
+                ? 1
+                : chapters
+                    .slice(0, chapterIndex)
+                    .reduce((acc, ch) => acc + (ch.courses?.length || 0) + (ch.quizzes?.length || 0), 1);
 
-            return (
-              <View key={chapter.id} style={styles.chapterSection}>
-                <Text style={styles.chapterTitle}>
-                  {getRomanNumeral(chapterIndex + 1)}. {chapter.title}
-                </Text>
+              return (
+                <View key={chapter.id} style={styles.chapterSection}>
+                  <Text style={styles.chapterTitle}>
+                    {getRomanNumeral(chapterIndex + 1)}. {chapter.title}
+                  </Text>
 
-                {chapter.courses?.map((course, courseIndex) => (
-                  <TouchableOpacity key={course.id} style={styles.courseItem}>
-                    <View style={styles.contentLeft}>
-                      <Text style={styles.contentNumber}>{itemCounter + courseIndex}</Text>
-                      <View style={styles.contentInfo}>
-                        <Text style={styles.contentTitle}>{course.title}</Text>
-                        <Text style={styles.courseMeta}>Cours • {course.duration}</Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity 
-                      style={styles.courseButton} 
-                      onPress={() => handleCourseClick(course, chapter, chapterIndex, chapters)}
-                    >
-                      {isCompleted(chapter.id, course.id, 'course') ? (
-                        <CheckVertIcon 
-                          width={30} 
-                          height={30} 
-                          color="#10B981" 
-                          style={{ marginTop: 5 }}
-                        />
-                      ) : !isPreviousChapterCompleted(chapterIndex, chapters) ? (
-                        <LockIcon 
-                          width={30} 
-                          height={30} 
-                          color="#9CA3AF" 
-                          style={{ marginTop: 5 }}
-                        />
-                      ) : (
-                        <FlecheIcon 
-                          width={150} 
-                          height={150} 
-                          color="#374151" 
-                          style={{ marginTop: 55 }}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                ))}
-
-                {chapter.quizzes?.map((quiz, quizIndex) => {
-                  const quizNumber = itemCounter + (chapter.courses?.length || 0) + quizIndex;
-                  return (
-                    <TouchableOpacity key={quiz.id} style={styles.quizItem}>
+                  {chapter.courses?.map((course, courseIndex) => (
+                    <TouchableOpacity key={course.id} style={styles.courseItem}>
                       <View style={styles.contentLeft}>
-                        <Text style={styles.contentNumber}>{quizNumber}</Text>
+                        <Text style={styles.contentNumber}>{itemCounter + courseIndex}</Text>
                         <View style={styles.contentInfo}>
-                          <Text style={styles.contentTitle}>{quiz.title}</Text>
-                          <Text style={styles.quizMeta}>Quiz • {quiz.question}</Text>
+                          <Text style={styles.contentTitle}>{course.title}</Text>
+                          <Text style={styles.courseMeta}>Cours • {course.duration}</Text>
                         </View>
                       </View>
                       <TouchableOpacity 
-                        style={styles.quizButton} 
-                        onPress={() => handleQuizClick(quiz, chapter, chapterIndex, chapters)}
+                        style={styles.courseButton} 
+                        onPress={() => handleCourseClick(course, chapter, chapterIndex, chapters)}
                       >
-                        {isCompleted(chapter.id, quiz.id, 'quiz') ? (
+                        {isCompleted(chapter.id, course.id, 'course') ? (
                           <CheckVertIcon 
                             width={30} 
                             height={30} 
                             color="#10B981" 
                             style={{ marginTop: 5 }}
                           />
-                        ) : !isPreviousChapterCompleted(chapterIndex, chapters) || !areAllCoursesCompleted(chapter.id, chapter.courses || []) ? (
+                        ) : !isPreviousChapterCompleted(chapterIndex, chapters) ? (
                           <LockIcon 
                             width={30} 
                             height={30} 
@@ -405,49 +417,142 @@ export default function FormationContentScreen() {
                         )}
                       </TouchableOpacity>
                     </TouchableOpacity>
-                  );
-                })}
-              </View>
-            );
-          })}
+                  ))}
 
-          <View style={styles.certificateSection}>
-            <TouchableOpacity 
-              style={[
-                styles.certificateButton,
-                { opacity: isFormationCompleted(chapters) ? 1 : 0.5 }
-              ]}
-              disabled={!isFormationCompleted(chapters)}
-              onPress={() => {
-                if (isFormationCompleted(chapters)) {
-                  router.push({
-                    pathname: '/certificate-result',
-                    params: {
-                      formationId: id,
-                      formationTitle: formation?.title || 'Formation'
-                    }
-                  } as any);
-                }
-              }}
-            >
-              <View style={styles.certificateButtonContent}>
-                <TrophyWhiteIcon 
-                  width={24} 
-                  height={24} 
-                  color="#FFFFFF"
-                  style={styles.trophyIcon}
-                />
-                <Text style={styles.certificateButtonText}>
-                  Obtenir mon certificat
-                </Text>
-              </View>
-              {!isFormationCompleted(chapters) && (
-                <Text style={styles.certificateSubtext}>
-                  Complétez tous les chapitres pour débloquer
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
+                  {chapter.quizzes?.map((quiz, quizIndex) => {
+                    const quizNumber = itemCounter + (chapter.courses?.length || 0) + quizIndex;
+                    return (
+                      <TouchableOpacity key={quiz.id} style={styles.quizItem}>
+                        <View style={styles.contentLeft}>
+                          <Text style={styles.contentNumber}>{quizNumber}</Text>
+                          <View style={styles.contentInfo}>
+                            <Text style={styles.contentTitle}>{quiz.title}</Text>
+                            <Text style={styles.quizMeta}>Quiz • {quiz.question}</Text>
+                          </View>
+                        </View>
+                        <TouchableOpacity 
+                          style={styles.quizButton} 
+                          onPress={() => handleQuizClick(quiz, chapter, chapterIndex, chapters)}
+                        >
+                          {isCompleted(chapter.id, quiz.id, 'quiz') ? (
+                            <CheckVertIcon 
+                              width={30} 
+                              height={30} 
+                              color="#10B981" 
+                              style={{ marginTop: 5 }}
+                            />
+                          ) : !isPreviousChapterCompleted(chapterIndex, chapters) || !areAllCoursesCompleted(chapter.id, chapter.courses || []) ? (
+                            <LockIcon 
+                              width={30} 
+                              height={30} 
+                              color="#9CA3AF" 
+                              style={{ marginTop: 5 }}
+                            />
+                          ) : (
+                            <FlecheIcon 
+                              width={150} 
+                              height={150} 
+                              color="#374151" 
+                              style={{ marginTop: 55 }}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              );
+            })
+          ) : (
+            // Contenu des statistiques
+            (() => {
+              const stats = calculateStatistics();
+              return (
+                <View style={styles.statisticsContainer}>
+                  {/* Cartes de statistiques principales */}
+                  <View style={styles.statsGrid}>
+                    <View style={styles.statCard}>
+                      <View style={styles.circularProgress}>
+                        <Text style={styles.percentageText}>{stats.precision}%</Text>
+                      </View>
+                      <Text style={styles.statLabel}>Précision</Text>
+                    </View>
+                    
+                    <View style={styles.statCard}>
+                      <View style={styles.circularProgress}>
+                        <Text style={styles.percentageText}>{stats.completion}%</Text>
+                      </View>
+                      <Text style={styles.statLabel}>Completion</Text>
+                    </View>
+                    
+                    <View style={styles.statCard}>
+                      <View style={styles.circularProgress}>
+                        <Text style={styles.percentageText}>{stats.winLossRatio}%</Text>
+                      </View>
+                      <Text style={styles.statLabel}>W/L ratio</Text>
+                    </View>
+                  </View>
+
+                  {/* Meilleur Test */}
+                  <View style={styles.bestTestCard}>
+                    <Text style={styles.bestTestTitle}>Meilleur Test</Text>
+                    <Text style={styles.bestTestSubtitle}>Meilleur score obtenu sur les quiz</Text>
+                    <Text style={styles.bestTestName}>{stats.bestTest.title}</Text>
+                    <Text style={styles.bestTestScore}>{stats.bestTest.score} • {stats.bestTest.status}</Text>
+                    <Text style={styles.bestTestDate}>Réalisé le {stats.bestTest.date}</Text>
+                  </View>
+
+                  {/* Temps d'apprentissage */}
+                  <View style={styles.learningTimeCard}>
+                    <Text style={styles.learningTimeTitle}>Temps d&apos;apprentissage</Text>
+                    <Text style={styles.learningTimeSubtitle}>Moyenne de temps passé par cours</Text>
+                    <Text style={styles.learningTimeValue}>{stats.learningTime}</Text>
+                    <Text style={styles.learningTimeDetail}>({stats.coursesCount} Cours)</Text>
+                  </View>
+                </View>
+              );
+            })()
+          )}
+
+          {activeTab === 'formation' && (
+            <View style={styles.certificateSection}>
+              <TouchableOpacity 
+                style={[
+                  styles.certificateButton,
+                  { opacity: isFormationCompleted(chapters) ? 1 : 0.5 }
+                ]}
+                disabled={!isFormationCompleted(chapters)}
+                onPress={() => {
+                  if (isFormationCompleted(chapters)) {
+                    router.push({
+                      pathname: '/certificate-result',
+                      params: {
+                        formationId: id,
+                        formationTitle: formation?.title || 'Formation'
+                      }
+                    } as any);
+                  }
+                }}
+              >
+                <View style={styles.certificateButtonContent}>
+                  <TrophyWhiteIcon 
+                    width={24} 
+                    height={24} 
+                    color="#FFFFFF"
+                    style={styles.trophyIcon}
+                  />
+                  <Text style={styles.certificateButtonText}>
+                    Obtenir mon certificat
+                  </Text>
+                </View>
+                {!isFormationCompleted(chapters) && (
+                  <Text style={styles.certificateSubtext}>
+                    Complétez tous les chapitres pour débloquer
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.bottomSpacer} />
         </ScrollView>
@@ -690,5 +795,124 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 80,
+  },
+  
+  // Styles pour les statistiques
+  statisticsContainer: {
+    flex: 1,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  circularProgress: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    borderWidth: 6,
+    borderColor: '#7376FF',
+    borderStyle: 'solid',
+  },
+  percentageText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    fontFamily: getFontFamily('bold'),
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+    fontFamily: getFontFamily('medium'),
+  },
+  bestTestCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  bestTestTitle: {
+    fontSize: 16,
+    color: '#9ca3af',
+    marginBottom: 4,
+    fontFamily: getFontFamily('medium'),
+  },
+  bestTestSubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginBottom: 16,
+    fontFamily: getFontFamily('regular'),
+  },
+  bestTestName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+    fontFamily: getFontFamily('bold'),
+  },
+  bestTestScore: {
+    fontSize: 16,
+    color: '#1f2937',
+    marginBottom: 8,
+    fontFamily: getFontFamily('medium'),
+  },
+  bestTestDate: {
+    fontSize: 14,
+    color: '#10b981',
+    fontFamily: getFontFamily('regular'),
+  },
+  learningTimeCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  learningTimeTitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginBottom: 4,
+    fontFamily: getFontFamily('medium'),
+  },
+  learningTimeSubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginBottom: 16,
+    fontFamily: getFontFamily('regular'),
+  },
+  learningTimeValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#10b981',
+    marginBottom: 4,
+    fontFamily: getFontFamily('bold'),
+  },
+  learningTimeDetail: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontFamily: getFontFamily('regular'),
   },
 });
