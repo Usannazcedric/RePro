@@ -112,44 +112,85 @@ app.listen(port, async () => {
 });
 
 function buildPrompt(text, quizConfig = { chapters: 3, quizzes: 5 }, infos = {}) {
-  return `
-Tu es une IA éducative française. Tu dois OBLIGATOIREMENT générer une structure de formation avec 3 chapitres EN FRANÇAIS.
+  return `Tu es un professeur expert qui crée une formation pratique et détaillée. ATTENTION: Ne fais PAS d'introduction générale ou de survol. Tu dois créer un VRAI COURS qui enseigne des compétences concrètes.
 
-TRÈS IMPORTANT: 
-- Réponds UNIQUEMENT en FRANÇAIS
-- Tout le contenu doit être en FRANÇAIS (titres, descriptions, questions, options)
-- Tu dois répondre UNIQUEMENT avec le JSON suivant, rien d'autre
+EXEMPLE DE MAUVAIS CONTENU (À NE PAS FAIRE):
+❌ "Découvrez la définition de X et son importance..."
+❌ "Dans ce cours, nous explorerons le concept de X..."
+❌ "Nous aborderons les différents aspects de X..."
+❌ "Introduction aux principes de X..."
 
-Analyse ce contenu de cours:
+EXEMPLE DE BON CONTENU (À FAIRE):
+✅ "Pour créer un elevator pitch efficace, commencez par identifier votre USP (Unique Selling Proposition). Prenez votre produit principal et listez ses 3 caractéristiques uniques. Par exemple, si vous vendez un logiciel de gestion de temps, vos USP pourraient être : 1) synchronisation instantanée entre appareils, 2) rapports d'analyse personnalisés, 3) intégration avec le calendrier. Ensuite, transformez ces caractéristiques en bénéfices clients concrets. Pour notre exemple : 1) accédez à vos tâches partout, instantanément, 2) optimisez votre productivité avec des données précises, 3) plus besoin de jongler entre applications..."
+STRUCTURE OBLIGATOIRE POUR CHAQUE COURS:
+1. Technique/Méthode concrète à apprendre
+2. Étapes précises de mise en œuvre
+3. Exemple détaillé et réel
+4. Conseils pratiques d'expert
+5. Exercice ou cas pratique
+6. Points clés à retenir
+
+Analyse ce contenu:
 """
 ${text}
 """
 
-Génère EXACTEMENT cette structure JSON (remplace les [...] par du contenu adapté au document EN FRANÇAIS):
+Génère EXACTEMENT cette structure JSON avec du contenu qui ENSEIGNE RÉELLEMENT:
 
 {
   "chapters": [
     {
       "id": 1,
-      "title": "[Titre du chapitre 1 basé sur le contenu - EN FRANÇAIS]",
+      "title": "[Titre précis et technique du chapitre]",
       "courses": [
         {
           "id": 1,
-          "title": "[Titre du cours basé sur le contenu - EN FRANÇAIS]",
+          "title": "[Titre qui annonce une compétence concrète à acquérir]",
           "duration": "4:30",
-          "content": "[Description détaillée du cours en 2-3 phrases basée sur le contenu du PDF - EN FRANÇAIS]"
+          "content": "[CONTENU DÉTAILLÉ ET PRATIQUE:
+
+1. TECHNIQUE PRINCIPALE:
+- Description précise de la technique/méthode
+- Pourquoi elle fonctionne
+- Quand l'utiliser
+
+2. ÉTAPES DE MISE EN ŒUVRE:
+- Étape 1: [instruction précise]
+- Étape 2: [instruction précise]
+- Étape 3: [instruction précise]
+- Étape 4: [instruction précise]
+
+3. EXEMPLE CONCRET:
+- Situation réelle
+- Application détaillée de la technique
+- Résultat obtenu
+
+4. CONSEILS D'EXPERT:
+- Conseil 1: [conseil spécifique]
+- Conseil 2: [conseil spécifique]
+- Conseil 3: [conseil spécifique]
+
+5. EXERCICE PRATIQUE:
+- Mise en situation
+- Instructions étape par étape
+- Critères de réussite
+
+6. POINTS CLÉS:
+- Point clé 1
+- Point clé 2
+- Point clé 3]"
         }
       ],
       "quizzes": [
         {
           "id": 1,
-          "title": "Test - Chapitre 1",
-          "question": "[Question basée sur le contenu du chapitre - EN FRANÇAIS]",
+          "title": "Test pratique - [Nom de la technique]",
+          "question": "[Question qui teste l'application pratique de la technique]",
           "options": {
-            "A": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "B": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "C": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "D": "[Option basée sur le contenu - EN FRANÇAIS]"
+            "A": "[Réponse détaillée montrant l'application correcte]",
+            "B": "[Réponse détaillée avec une erreur courante]",
+            "C": "[Réponse détaillée avec une autre approche incorrecte]",
+            "D": "[Réponse détaillée avec une confusion commune]"
           },
           "correctAnswer": "A"
         }
@@ -157,25 +198,25 @@ Génère EXACTEMENT cette structure JSON (remplace les [...] par du contenu adap
     },
     {
       "id": 2,
-      "title": "[Titre du chapitre 2 basé sur le contenu - EN FRANÇAIS]",
+      "title": "[Titre précis et technique du chapitre]",
       "courses": [
         {
           "id": 2,
-          "title": "[Titre du cours basé sur le contenu - EN FRANÇAIS]",
+          "title": "[Titre qui annonce une compétence concrète à acquérir]",
           "duration": "5:15",
-          "content": "[Description détaillée du cours en 2-3 phrases basée sur le contenu du PDF - EN FRANÇAIS]"
+          "content": "[MÊME STRUCTURE DÉTAILLÉE QUE CI-DESSUS]"
         }
       ],
       "quizzes": [
         {
           "id": 2,
-          "title": "Test - Chapitre 2",
-          "question": "[Question basée sur le contenu du chapitre - EN FRANÇAIS]",
+          "title": "Test pratique - [Nom de la technique]",
+          "question": "[Question qui teste l'application pratique de la technique]",
           "options": {
-            "A": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "B": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "C": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "D": "[Option basée sur le contenu - EN FRANÇAIS]"
+            "A": "[Réponse détaillée avec une erreur courante]",
+            "B": "[Réponse détaillée montrant l'application correcte]",
+            "C": "[Réponse détaillée avec une autre approche incorrecte]",
+            "D": "[Réponse détaillée avec une confusion commune]"
           },
           "correctAnswer": "B"
         }
@@ -183,25 +224,25 @@ Génère EXACTEMENT cette structure JSON (remplace les [...] par du contenu adap
     },
     {
       "id": 3,
-      "title": "[Titre du chapitre 3 basé sur le contenu - EN FRANÇAIS]",
+      "title": "[Titre précis et technique du chapitre]",
       "courses": [
         {
           "id": 3,
-          "title": "[Titre du cours basé sur le contenu - EN FRANÇAIS]",
+          "title": "[Titre qui annonce une compétence concrète à acquérir]",
           "duration": "6:00",
-          "content": "[Description détaillée du cours en 2-3 phrases basée sur le contenu du PDF - EN FRANÇAIS]"
+          "content": "[MÊME STRUCTURE DÉTAILLÉE QUE CI-DESSUS]"
         }
       ],
       "quizzes": [
         {
           "id": 3,
-          "title": "Test - Chapitre 3",
-          "question": "[Question basée sur le contenu du chapitre - EN FRANÇAIS]",
+          "title": "Test pratique - [Nom de la technique]",
+          "question": "[Question qui teste l'application pratique de la technique]",
           "options": {
-            "A": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "B": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "C": "[Option basée sur le contenu - EN FRANÇAIS]",
-            "D": "[Option basée sur le contenu - EN FRANÇAIS]"
+            "A": "[Réponse détaillée avec une erreur courante]",
+            "B": "[Réponse détaillée avec une autre approche incorrecte]",
+            "C": "[Réponse détaillée montrant l'application correcte]",
+            "D": "[Réponse détaillée avec une confusion commune]"
           },
           "correctAnswer": "C"
         }
@@ -210,15 +251,15 @@ Génère EXACTEMENT cette structure JSON (remplace les [...] par du contenu adap
   ]
 }
 
-RÈGLES STRICTES:
-- Réponds UNIQUEMENT avec ce JSON
-- Remplace tous les [...] par du contenu réel EN FRANÇAIS
-- 3 chapitres OBLIGATOIRES
-- Minimum 1 cours et 1 quiz par chapitre
-- Tu peux ajouter plus de cours/quiz si tu veux
-- Durées entre 3:00 et 8:00
-- TOUT LE CONTENU DOIT ÊTRE EN FRANÇAIS
-`;
+RÈGLES ABSOLUES:
+1. JAMAIS de contenu introductif ou descriptif
+2. TOUJOURS du contenu qui enseigne des techniques concrètes
+3. OBLIGATION de suivre la structure en 6 points pour chaque cours
+4. MINIMUM 3 exemples concrets par cours
+5. TOUJOURS des étapes précises et actionnables
+6. Si le PDF est incomplet, COMPLÈTE avec tes connaissances d'expert
+7. Les quiz doivent tester l'application pratique, pas la théorie
+8. Chaque réponse de quiz doit être détaillée et explicative`;
 }
 
 function parseAIResponse(response) {
