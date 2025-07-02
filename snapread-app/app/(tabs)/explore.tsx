@@ -1,11 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+// @ts-ignore
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import BagIcon from '../../components/BagIcon';
 import { getFontFamily } from '../../constants/Fonts';
 import { supabase } from '../../lib/supabase';
+
+// Progress SVG imports
+import FlagColoredIcon from '../../assets/images/flag-colored.svg';
+import ProgressBarGreyIcon from '../../assets/images/progressbar grey.svg';
+import ProgressBarMidIcon from '../../assets/images/progressbar mid.svg';
+import ProgressBarColoredIcon from '../../assets/images/progressbarcolored.svg';
+import Chapter1GreyIcon from '../../assets/images/1 grey.svg';
+import Chapter1ColoredIcon from '../../assets/images/1 colored.svg';
+import Chapter2GreyIcon from '../../assets/images/2 grey.svg';
+import Chapter2ColoredIcon from '../../assets/images/2 colored.svg';
+import Chapter3GreyIcon from '../../assets/images/3 grey.svg';
+import Chapter3ColoredIcon from '../../assets/images/3 colored.svg';
+import TrophyGreyIcon from '../../assets/images/trophy grey.svg';
+import TrophyColoredIcon from '../../assets/images/trophy colored.svg';
 
 interface PurchasedFormation {
   id: string;
@@ -27,9 +42,143 @@ interface PurchasedFormation {
   } | null;
 }
 
+interface UserProgress {
+  formation_id: string;
+  chapter_id: string;
+  course_id?: string;
+  quiz_id?: string;
+  type: 'course' | 'quiz';
+  completed: boolean;
+  score?: number;
+}
+
+interface FormationProgress {
+  [key: string]: { // formation_id
+    [key: string]: { // chapter_id
+      courseCompleted: boolean;
+      quizCompleted: boolean;
+    };
+  };
+}
+
+// Composant pour afficher la progression d'une formation
+interface ProgressBarProps {
+  formation: PurchasedFormation['formations'];
+  progress: FormationProgress[string];
+}
+
+const FormationProgressBar: React.FC<ProgressBarProps> = ({ formation, progress }) => {
+  if (!formation) return null;
+  
+  // 🎯 DONNÉES SIMULÉES pour tester les états visuels
+  // Une fois que l'affichage est correct, on utilisera les vraies données de `progress`
+  console.log('📊 Progress data received:', progress);
+  const getSimulatedProgress = () => {
+    const formationTitle = formation.title?.toLowerCase() || '';
+    
+    if (formationTitle.includes('biologie')) {
+      // Formation Biologie: Chapitre 1 cours fait (barre orange), quiz pas fait (numéro gris)
+      return [
+        { courseCompleted: true, quizCompleted: false },   // Chapitre 1: barre orange, numéro gris
+        { courseCompleted: false, quizCompleted: false },  // Chapitre 2: barre grise, numéro gris
+        { courseCompleted: false, quizCompleted: false }   // Chapitre 3: barre grise, numéro gris
+      ];
+    } else if (formationTitle.includes('marketing') || formationTitle.includes('elevator')) {
+      // Formation Marketing: Ch1 complet (barre verte, numéro coloré), Ch2 cours fait (barre orange, numéro gris)  
+      return [
+        { courseCompleted: true, quizCompleted: true },    // Chapitre 1: barre verte, numéro coloré
+        { courseCompleted: true, quizCompleted: false },   // Chapitre 2: barre orange, numéro gris
+        { courseCompleted: false, quizCompleted: false }   // Chapitre 3: barre grise, numéro gris
+      ];
+    } else {
+      // Autres formations: rien de commencé
+      return [
+        { courseCompleted: false, quizCompleted: false },  // Tout gris
+        { courseCompleted: false, quizCompleted: false },
+        { courseCompleted: false, quizCompleted: false }
+      ];
+    }
+  };
+  
+  const simulatedProgress = getSimulatedProgress();
+
+  const getChapterIcon = (chapterNumber: number, isCompleted: boolean) => {
+    const iconProps = { width: 16, height: 16 };
+    
+    switch (chapterNumber) {
+      case 1:
+        return isCompleted ? <Chapter1ColoredIcon {...iconProps} /> : <Chapter1GreyIcon {...iconProps} />;
+      case 2:
+        return isCompleted ? <Chapter2ColoredIcon {...iconProps} /> : <Chapter2GreyIcon {...iconProps} />;
+      case 3:
+        return isCompleted ? <Chapter3ColoredIcon {...iconProps} /> : <Chapter3GreyIcon {...iconProps} />;
+      default:
+        return <Chapter1GreyIcon {...iconProps} />;
+    }
+  };
+
+  const getProgressBarIcon = (chapterIndex: number) => {
+    const chapterProgress = simulatedProgress[chapterIndex];
+    const iconProps = { width: 30, height: 10 };
+    
+    if (!chapterProgress) {
+      return <ProgressBarGreyIcon {...iconProps} />;
+    }
+    
+    if (chapterProgress.courseCompleted && chapterProgress.quizCompleted) {
+      return <ProgressBarColoredIcon {...iconProps} />;
+    } else if (chapterProgress.courseCompleted) {
+      return <ProgressBarMidIcon {...iconProps} />;
+    }
+    
+    return <ProgressBarGreyIcon {...iconProps} />;
+  };
+
+  const isChapterCompleted = (chapterIndex: number) => {
+    const chapterProgress = simulatedProgress[chapterIndex];
+    return chapterProgress && chapterProgress.courseCompleted && chapterProgress.quizCompleted;
+  };
+
+
+
+  return (
+    <View style={styles.progressContainer}>
+      <View style={styles.progressRow}>
+        {/* Drapeau de départ - toujours coloré */}
+        <FlagColoredIcon width={12} height={12} />
+        
+        {/* Barre 1 */}
+        {getProgressBarIcon(0)}
+        
+        {/* Chapitre 1 */}
+        {getChapterIcon(1, isChapterCompleted(0))}
+        
+        {/* Barre 2 */}
+        {getProgressBarIcon(1)}
+        
+        {/* Chapitre 2 */}
+        {getChapterIcon(2, isChapterCompleted(1))}
+        
+        {/* Barre 3 */}
+        {getProgressBarIcon(2)}
+        
+        {/* Chapitre 3 */}
+        {getChapterIcon(3, isChapterCompleted(2))}
+        
+        {/* Barre finale */}
+        <ProgressBarGreyIcon width={30} height={10} />
+        
+        {/* Trophée - toujours gris pour l'instant (certificat pas encore implémenté) */}
+        <TrophyGreyIcon width={12} height={12} />
+      </View>
+    </View>
+  );
+};
+
 export default function TabTwoScreen() {
   const router = useRouter();
   const [formations, setFormations] = useState<PurchasedFormation[]>([]);
+  const [formationProgress, setFormationProgress] = useState<FormationProgress>({});
   const [loading, setLoading] = useState(true);
 
   const fetchPurchasedFormations = async () => {
@@ -71,11 +220,65 @@ export default function TabTwoScreen() {
       }
 
       setFormations((data as any) || []);
+      
+      // Récupérer la progression pour ces formations
+      if (data && data.length > 0) {
+        await fetchUserProgress(user.id, data.map(f => f.formation_id));
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des formations:', error);
       setFormations([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserProgress = async (userId: string, formationIds: string[]) => {
+    try {
+      console.log('🔍 Fetching progress for user:', userId);
+      console.log('🔍 Formation IDs:', formationIds);
+      
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .in('formation_id', formationIds);
+
+      if (error) {
+        console.error('❌ Erreur lors du chargement de la progression:', error);
+        return;
+      }
+
+      console.log('📊 Raw progress data:', data);
+
+      // Organiser les données de progression par formation et chapitre
+      const progressMap: FormationProgress = {};
+      
+      (data as UserProgress[] || []).forEach(progress => {
+        console.log('📝 Processing progress:', progress);
+        
+        if (!progressMap[progress.formation_id]) {
+          progressMap[progress.formation_id] = {};
+        }
+        
+        if (!progressMap[progress.formation_id][progress.chapter_id]) {
+          progressMap[progress.formation_id][progress.chapter_id] = {
+            courseCompleted: false,
+            quizCompleted: false
+          };
+        }
+        
+        if (progress.type === 'course' && progress.completed) {
+          progressMap[progress.formation_id][progress.chapter_id].courseCompleted = true;
+        } else if (progress.type === 'quiz' && progress.completed) {
+          progressMap[progress.formation_id][progress.chapter_id].quizCompleted = true;
+        }
+      });
+      
+      console.log('🗺️ Final progress map:', progressMap);
+      setFormationProgress(progressMap);
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement de la progression:', error);
     }
   };
 
@@ -191,6 +394,13 @@ export default function TabTwoScreen() {
                 <Text style={[styles.title, { color: themeColor }]}>
                   {formation.title}
                 </Text>
+                
+                {/* Barre de progression SVG */}
+                <FormationProgressBar 
+                  formation={formation}
+                  progress={formationProgress[purchasedFormation.formation_id] || {}}
+                />
+                
                 <Text style={styles.details}>
                   {progress.currentChapter}e CHAPITRE • {progress.coursesFollowed} COURS SUIVIS • {progress.quizzesCompleted} QUIZ RÉUSSIS
                 </Text>
@@ -315,5 +525,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  progressContainer: {
+    marginTop: 4,
+    marginBottom: 4,
+    paddingHorizontal: 2,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 1,
   },
 });

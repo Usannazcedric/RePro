@@ -53,12 +53,14 @@ onUnmounted(() => {
 <template>
   <header class="main-navbar">
     <div class="wrapper">
-      <div class="logo-text">SnapRead</div>
+      <RouterLink to="/" class="logo-text">SnapRead</RouterLink>
       <nav :class="{ 'active': isMenuOpen }">
-        <RouterLink to="/">Accueil</RouterLink>
-        <RouterLink to="/community">Communauté</RouterLink>
-        <RouterLink to="/formations">Mes formations</RouterLink>
-        <RouterLink to="/faq">FAQ</RouterLink>
+        <RouterLink to="/" @click="isMenuOpen = false">Accueil</RouterLink>
+        <RouterLink to="/community" @click="isMenuOpen = false">Communauté</RouterLink>
+        <RouterLink to="/formations" @click="isMenuOpen = false">Mes formations</RouterLink>
+        <RouterLink to="/faq" @click="isMenuOpen = false">FAQ</RouterLink>
+        <RouterLink v-if="!user" to="/login" class="mobile-login-btn" @click="isMenuOpen = false">Se connecter</RouterLink>
+        <!-- <RouterLink v-else to="/profile" class="mobile-profile-btn" @click="isMenuOpen = false">Profil</RouterLink> -->
       </nav>
       <div class="user-section">
         <RouterLink v-if="!user" to="/login" class="login-btn">Se connecter</RouterLink>
@@ -96,10 +98,6 @@ onUnmounted(() => {
   background: transparent;
   width: 100vw;
   min-height: 70px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 100;
   box-sizing: border-box;
 }
 .wrapper {
@@ -120,6 +118,7 @@ onUnmounted(() => {
   letter-spacing: -1px;
   position: absolute;
   left: 4vw;
+  text-decoration: none;
 }
 nav {
   display: flex;
@@ -186,6 +185,10 @@ nav a:hover {
 .login-btn:hover {
   background: #5d60d6;
 }
+
+.mobile-login-btn {
+  display: none;
+}
 .profile-btn {
   display: flex;
   align-items: center;
@@ -221,7 +224,8 @@ nav a:hover {
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 20;
+  z-index: 1001;
+  position: relative;
 }
 .burger span {
   display: block;
@@ -229,6 +233,15 @@ nav a:hover {
   height: 3px;
   background: #7376FF;
   transition: transform 0.3s ease;
+}
+.burger span.open:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+.burger span.open:nth-child(2) {
+  opacity: 0;
+}
+.burger span.open:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
 }
 @media (max-width: 900px) {
   .wrapper {
@@ -243,9 +256,33 @@ nav a:hover {
   }
 }
 @media (max-width: 768px) {
+  .wrapper {
+    justify-content: space-between;
+  }
+  
+  .logo-text {
+    position: static;
+    order: 1;
+  }
+  
   .burger {
     display: flex;
+    order: 3;
   }
+  
+  .user-section {
+    position: static;
+    order: 2;
+  }
+  
+  .user-section .login-btn {
+    display: none;
+  }
+  
+  .user-section .profile-btn {
+    display: none;
+  }
+  
   nav {
     position: fixed;
     top: 0;
@@ -258,25 +295,83 @@ nav a:hover {
     justify-content: center;
     display: none;
     text-align: center;
-    z-index: 15;
+    z-index: 1000;
+    gap: 40px;
+    padding: 40px 20px;
+    box-shadow: none;
+    border-radius: 0;
   }
+  
   nav.active {
     display: flex;
   }
+  
   nav a {
-    padding: 15px;
-    font-size: 1.3rem;
+    padding: 20px;
+    font-size: 1.4rem;
     color: #000;
+    width: 280px;
+    text-align: center;
+    font-weight: 600;
+    border-radius: 15px;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 35px;
   }
-  .login-btn {
-    position: absolute;
-    top: 1.5rem;
-    right: 2rem;
-    margin: 0;
+  
+  nav a::after {
+    display: none;
+  }
+  
+  nav a:hover {
+    color: #7376FF;
+  }
+  
+  .mobile-login-btn {
+    background: #7376FF !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 25px;
+    padding: 16px 32px !important;
+    text-decoration: none;
+    margin-top: 30px;
+    font-size: 1.2rem !important;
+    width: 280px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+    margin-right: 35px;
+  }
+  
+  .mobile-login-btn:hover {
+    background: #5d60d6 !important;
+  }
+  
+  .mobile-profile-btn {
+    background: #7376FF !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 25px;
+    padding: 16px 32px !important;
+    text-decoration: none;
+    margin-top: 30px;
+    font-size: 1.2rem !important;
+    width: 280px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+    margin-right: 35px;
+  }
+  
+  .mobile-profile-btn:hover {
+    background: #5d60d6 !important;
   }
 }
 .main-content {
-  padding-top: 90px;
   min-height: 100vh;
   box-sizing: border-box;
 }

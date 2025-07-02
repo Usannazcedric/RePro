@@ -1,14 +1,89 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+// @ts-ignore
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../lib/supabase';
 import { Fonts } from '../../constants/Fonts';
 
+// Import des SVG
+import Svg75 from '../../assets/images/75.svg';
+import Svg90 from '../../assets/images/90.svg';
+import CertifIcon from '../../assets/images/certif.svg';
+
+interface Formation {
+  id: string;
+  title: string;
+  theme: string;
+  description: string;
+  quiz_count: number;
+  chapter_count: number;
+  certificate_available?: boolean;
+  formation_data?: {
+    coverImageUrl?: string;
+    chapters?: Array<{
+      quizzes?: any[];
+    }>;
+  };
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [suggestedFormations, setSuggestedFormations] = useState<Formation[]>([]);
+
+const fetchSuggestedFormations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('formations')
+        .select('id, title, theme, description, quiz_count, chapter_count, certificate_available, formation_data')
+        .limit(20); // Augmenter pour avoir plus de choix
+
+      if (error) {
+        console.error('Erreur lors du chargement des formations:', error);
+        return;
+      }
+
+      const allFormations = data || [];
+      
+      // D'abord essayer de trouver des formations avec des images
+      const formationsWithImages = allFormations.filter(formation => {
+        const coverImageUrl = formation?.formation_data?.coverImageUrl;
+        return coverImageUrl && coverImageUrl.trim() !== '';
+      });
+
+      // Si on a des formations avec images, les utiliser. Sinon, prendre n'importe lesquelles
+      const selectedFormations = formationsWithImages.length >= 2 
+        ? formationsWithImages.slice(0, 2)
+        : allFormations.slice(0, 2);
+
+      setSuggestedFormations(selectedFormations);
+    } catch (error) {
+      console.error('Erreur lors du chargement des formations:', error);
+    }
+  };
+
+  // Helper functions to extract formation data
+  const getCoverImageUrl = (formation: Formation) => {
+    return formation?.formation_data?.coverImageUrl || null;
+  };
+
+  const getChapterCount = (formation: Formation) => {
+    const chapters = formation?.formation_data?.chapters || [];
+    return chapters.length || formation.chapter_count || 0;
+  };
+
+  const getQuizCount = (formation: Formation) => {
+    const chapters = formation?.formation_data?.chapters || [];
+    if (chapters.length > 0) {
+      return chapters.reduce((total, chapter) => {
+        return total + (chapter.quizzes?.length || 0);
+      }, 0);
+    }
+    return formation.quiz_count || 0;
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -16,65 +91,87 @@ export default function HomeScreen() {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            const { data: profile, error } = await supabase
+            const { data: profileData, error } = await supabase
               .from('profiles')
-              .select('username')
+              .select('username, avatar_url')
               .eq('id', user.id)
               .single();
 
             if (error) {
               console.error('Erreur lors de la récupération du profil:', error);
               setUsername(null);
+              setProfile(null);
             } else {
-              setUsername(profile?.username || user.email?.split('@')[0] || 'Utilisateur');
+              setUsername(profileData?.username || user.email?.split('@')[0] || 'Utilisateur');
+              setProfile(profileData);
             }
-          } else {
+                      } else {
+              setUsername(null);
+              setProfile(null);
+            }
+          } catch (err) {
+            console.error('Erreur lors du chargement de l&apos;utilisateur', err);
             setUsername(null);
+            setProfile(null);
           }
-        } catch (err) {
-          console.error('Erreur lors du chargement de l utilisateur', err);
-          setUsername(null);
-        }
       };
 
       fetchUser();
+      fetchSuggestedFormations();
     }, [])
   );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <Text style={styles.subtitle}>Reprenons l'apprentissage,</Text>
+            <Text style={styles.subtitle}>Reprenons l&apos;apprentissage,</Text>
             <Text style={styles.usernameText}>
               {username ? `${username}!` : '...'}
             </Text>
           </View>
 
           <TouchableOpacity onPress={() => router.push('/profile')}>
-            <Image
-              source={require('../../assets/images/pexels-photo-415829.jpeg')}
-              style={styles.avatar}
-            />
+            {profile?.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                style={styles.avatar}
+              />
+            ) : (
+              <Image
+                source={require('../../assets/images/pexels-photo-415829.jpeg')}
+                style={styles.avatar}
+              />
+            )}
           </TouchableOpacity>
         </View>
 
         {/* Quiz + stats */}
         <View style={styles.dashboard}>
-          <View style={[styles.card, styles.quiz]}>
-            <Text style={styles.quizLabel}>AUJOURD'HUI - QUIZ</Text>
+          <TouchableOpacity 
+            style={[styles.card, styles.quiz]}
+            onPress={() => router.push('/(tabs)/explore')}
+          >
+            <Text style={styles.quizLabel}>AUJOURD&apos;HUI - QUIZ</Text>
             <Text style={styles.quizTitle}>Python</Text>
-            
-          </View>
+            <Text style={styles.quizSubtitle}>Tenter maintenant</Text>
+          </TouchableOpacity>
 
           <View style={[styles.card, styles.circle]}>
-            <Text style={styles.circleValue}>90%</Text>
+            <View style={styles.svgContainer}>
+              <Svg90 width={160} height={160} />
+            </View>
             <Text style={styles.circleLabel}>XP restant</Text>
           </View>
 
           <View style={[styles.card, styles.circle]}>
-            <Text style={styles.circleValue}>75%</Text>
+            <View style={styles.svgContainer}>
+              <Svg75 width={160} height={160} />
+            </View>
             <Text style={styles.circleLabel}>Précision</Text>
           </View>
         </View>
@@ -84,22 +181,27 @@ export default function HomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Historique des Quiz</Text>
             <TouchableOpacity onPress={() => router.push('/history')}>
-  <Text style={styles.link}>Voir tout</Text>
-</TouchableOpacity>
+              <Text style={styles.link}>Voir tout</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.quizHistory}>
+          <View style={styles.quizHistoryCard}>
+            <View style={styles.quizHistoryHeader}>
+              <Text style={styles.codeLabel}>Code</Text>
+            </View>
             <Text style={styles.quizSubject}>React Native</Text>
-            <Text style={styles.quizInfo}>
-              Quiz : 19/20 <Text style={styles.success}>RÉUSSI</Text>
-            </Text>
+            <Text style={styles.quizChapter}>DERNIER CHAPITRE - REACT NATIVE</Text>
+            <View style={styles.quizResult}>
+              <Text style={styles.quizScore}>Quiz • 19/20</Text>
+              <Text style={styles.success}>RÉUSSI</Text>
+            </View>
           </View>
         </View>
 
         {/* Routine */}
-        <View style={styles.routine}>
-          <Text style={styles.routineTitle}>REPRO ROUTINE • 4 JOURS</Text>
+        <View style={styles.routineCard}>
+          <Text style={styles.routineTitle}>SNAPREAD ROUTINE • 4 JOURS</Text>
           <Text style={styles.routineSubtext}>
-            Connectez-vous plusieurs jours d'affilée pour créer une routine.
+            Connectez-vous plusieurs jours d&apos;affilée pour créer une routine.
           </Text>
           <View style={styles.routineDays}>
             {['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'].map((day, index) => (
@@ -124,16 +226,54 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Formations Suggérées</Text>
           <View style={styles.courseContainer}>
-            <View style={styles.courseCard}>
-              <Text style={styles.courseBadge}>📄 Certificat Disponible</Text>
-              <Text style={styles.courseTitle}>Computer Science</Text>
-              <Text style={styles.courseInfo}>30 Quiz • 10 Chapitres</Text>
-            </View>
-            <View style={styles.courseCard}>
-              <Text style={styles.courseBadge}>🧪 Certificat Disponible</Text>
-              <Text style={styles.courseTitle}>AP® Biology</Text>
-              <Text style={styles.courseInfo}>20 Quiz • 7 Chapitres</Text>
-            </View>
+            {suggestedFormations.map((formation) => {
+              const coverImageUrl = getCoverImageUrl(formation);
+              const quizCount = getQuizCount(formation);
+              const chapterCount = getChapterCount(formation);
+              
+              return (
+                <TouchableOpacity
+                  key={formation.id}
+                  style={styles.courseCard}
+                  onPress={() => router.push(`/formation-detail?id=${formation.id}`)}
+                >
+                  {/* Image de couverture */}
+                  <View style={styles.imageContainer}>
+                    {coverImageUrl ? (
+                      <Image
+                        source={{ uri: coverImageUrl }}
+                        style={styles.formationImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.placeholderImage}>
+                        <Text style={styles.placeholderIcon}>📚</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Contenu de la carte */}
+                  <View style={styles.cardContent}>
+                    {/* Badge certificat */}
+                    {formation.certificate_available && (
+                      <View style={styles.certificateBadge}>
+                        <CertifIcon 
+                          width={12} 
+                          height={12} 
+                          style={styles.certificateIcon}
+                        />
+                        <Text style={styles.certificateText}>Certificat Disponible</Text>
+                      </View>
+                    )}
+                    
+                    <Text style={styles.courseTitle}>{formation.title}</Text>
+                    <Text style={styles.courseInfo}>
+                      {quizCount} Quiz • {chapterCount} Chapitres
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       </ScrollView>
@@ -144,7 +284,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f7',
     paddingHorizontal: 20,
     fontFamily: Fonts.regular,
   },
@@ -160,8 +300,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 22,
-    color: '#000',
+    color: '#1a1a1a',
     fontFamily: Fonts.regular,
+    fontWeight: '600',
     marginBottom: 4,
     lineHeight: 28,
   },
@@ -175,16 +316,19 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#6366F1',
   },
   dashboard: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
+    gap: 8,
+    marginTop: 20,
+    height: 120,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 4 },
@@ -195,28 +339,41 @@ const styles = StyleSheet.create({
   },
   quiz: {
     alignItems: 'flex-start',
+    borderWidth: 2,
+    borderColor: '#6366F1',
   },
   quizLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#888',
+    fontWeight: '500',
   },
   quizTitle: {
-    fontSize: 20,
-    marginVertical: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 6,
+    color: '#333',
+  },
+  quizSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 20,
   },
   quizBtn: {
-    backgroundColor: '#0B3C83',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
+    backgroundColor: '#6366F1',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 8,
   },
   quizBtnText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+    fontWeight: '600',
+    fontSize: 13,
   },
   circle: {
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 8,
   },
   circleValue: {
     fontSize: 20,
@@ -224,7 +381,7 @@ const styles = StyleSheet.create({
     color: '#0B3C83',
   },
   circleLabel: {
-    marginTop: 8,
+    marginTop: - 47,
     fontSize: 14,
     color: '#333',
   },
@@ -239,9 +396,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#6366F1',
   },
   link: {
-    color: '#0B3C83',
+    color: '#6366F1',
     fontSize: 14,
   },
   quizHistory: {
@@ -249,24 +407,71 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
   },
+  quizHistoryCard: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  quizHistoryHeader: {
+    marginBottom: 12,
+  },
+  codeLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6366F1',
+  },
   quizSubject: {
     fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 4,
+    fontSize: 24,
+    marginBottom: 8,
+    color: '#6366F1',
+  },
+  quizChapter: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  quizResult: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  quizScore: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
   quizInfo: {
     fontSize: 14,
     color: '#444',
   },
   success: {
-    color: 'green',
+    color: '#22c55e',
     fontWeight: 'bold',
+    fontSize: 14,
   },
   routine: {
     backgroundColor: '#f7f7f7',
     padding: 16,
     borderRadius: 12,
     marginTop: 24,
+  },
+  routineCard: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 16,
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 5,
   },
   routineTitle: {
     fontWeight: 'bold',
@@ -316,12 +521,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 12,
+    elevation: 4,
   },
   courseBadge: {
     fontSize: 12,
@@ -332,9 +537,51 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 6,
+    color: '#1f2937',
   },
   courseInfo: {
-    fontSize: 13,
-    color: '#666',
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  imageContainer: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#e5e7eb',
+  },
+  formationImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderIcon: {
+    fontSize: 40,
+    color: '#6b7280',
+  },
+  cardContent: {
+    padding: 16,
+  },
+  certificateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  certificateIcon: {
+    marginRight: 4,
+  },
+  certificateText: {
+    fontSize: 11,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  svgContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
   },
 });

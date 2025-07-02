@@ -780,17 +780,63 @@ export default {
   
   .features-section {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
     text-align: center;
+    padding: 2.5rem 1rem;
+    width: 100vw;
+  }
+  
+  .feature {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    max-width: 100%;
+    padding: 1rem;
+  }
+  
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .feature-title {
+    font-size: 1.2rem;
+    font-weight: 500;
   }
   
   .enhanced-features {
     flex-direction: column;
-    gap: 2rem;
+    gap: 3rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .enhanced-feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+  }
+  
+  .enhanced-icon {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 1rem;
+  }
+  
+  .enhanced-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    text-align: center;
   }
   
   .enhanced-title {
     font-size: 2rem;
+    text-align: center;
+    margin-left: 0;
+    margin-bottom: 4rem;
   }
   
   .ai-cards {
@@ -832,6 +878,7 @@ export default {
   .ai-title {
     font-size: 2rem;
     text-align: center;
+    margin-left: 0;
   }
   
   .pricing-content {

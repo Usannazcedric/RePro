@@ -118,7 +118,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.optionItem} onPress={handleTermsPress}>
             <View style={styles.optionLeft}>
               <SvgXml xml={DocumentIcon} width={24} height={24} />
-              <Text style={styles.optionText}>Conditions d'utilisation</Text>
+              <Text style={styles.optionText}>Conditions d&apos;utilisation</Text>
             </View>
             <SvgXml xml={ArrowIcon} width={24} height={24} />
           </TouchableOpacity>
@@ -126,7 +126,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.optionItem} onPress={handleAboutPress}>
             <View style={styles.optionLeft}>
               <SvgXml xml={InfoIcon} width={24} height={24} />
-              <Text style={styles.optionText}>À propos de l'application</Text>
+              <Text style={styles.optionText}>À propos de l&apos;application</Text>
             </View>
             <SvgXml xml={ArrowIcon} width={24} height={24} />
           </TouchableOpacity>
@@ -137,7 +137,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.optionItem} onPress={handleRatePress}>
             <View style={styles.optionLeft}>
               <SvgXml xml={StarIcon} width={24} height={24} />
-              <Text style={styles.optionText}>Évaluer l'application</Text>
+              <Text style={styles.optionText}>Évaluer l&apos;application</Text>
             </View>
             <SvgXml xml={ArrowIcon} width={24} height={24} />
           </TouchableOpacity>

@@ -225,19 +225,15 @@ export default {
 }
 
 html, body {
-  overflow: hidden;
   height: 100%;
   width: 100%;
 }
 
 .register-page {
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   background: #E9E9EE;
+  padding-top: 90px;
 }
 
 .register-wrapper {
@@ -458,9 +454,7 @@ button.submit-button:hover {
   }
 
   .left-section {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 30px;
+    display: none;
   }
 
   .right-section {
@@ -515,6 +509,10 @@ button.submit-button:hover {
     padding-top: 20px;
   }
   
+  .left-section {
+    display: none;
+  }
+  
   .title-left h1 {
     font-size: 20px;
   }
@@ -540,4 +538,3 @@ button.submit-button:hover {
   }
 }
 </style>
-  

@@ -156,19 +156,15 @@ export default {
 }
 
 html, body {
-  overflow: hidden;
   height: 100%;
   width: 100%;
 }
 
 .login-page {
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   background: #E9E9EE;
+  padding-top: 90px;
 }
 
 .login-wrapper {
@@ -176,8 +172,9 @@ html, body {
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 100%;
+  min-height: calc(100vh - 90px);
   padding: 0 128px;
+  margin-top: -120px;
 }
 
 .left-section {
@@ -377,85 +374,166 @@ button.submit-button:hover {
 }
 
 @media (max-width: 768px) {
+  .login-page {
+    padding-top: 0;
+  }
+  
   .login-wrapper {
     flex-direction: column;
     padding: 20px;
-    height: auto;
+    min-height: calc(100vh - 80px);
     justify-content: flex-start;
-    padding-top: 40px;
+    margin-top: 150px;
   }
 
   .left-section {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 30px;
+    display: none;
   }
 
   .right-section {
     width: 100%;
-    padding: 10px;
+    padding: 20px 10px;
+    max-width: 400px;
+    margin: 0 auto;
   }
 
   .title-left h1 {
-    font-size: 24px;
+    font-size: 20px;
     text-align: center;
+    line-height: 1.4;
+    margin-bottom: 15px;
   }
 
   h1 {
-    font-size: 30px;
+    font-size: 24px;
     text-align: center;
+    margin-bottom: 20px;
   }
 
   .little-text {
-    font-size: 0.6em;
+    font-size: 0.55em;
     text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    line-height: 1.5;
   }
 
   .buttons {
     justify-content: center;
-    flex-direction: column;
-    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 20px;
   }
   
   .buttons button {
-    width: 100%;
-    max-width: 200px;
+    width: auto;
+    min-width: 140px;
+    max-width: 180px;
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+
+  .input-container {
+    margin-bottom: 15px;
+    padding: 12px;
+  }
+  
+  .input-container label {
+    font-size: 11px;
+  }
+  
+  .input-container input {
+    font-size: 14px;
+    padding: 6px;
   }
 
   .login-link {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 15px;
+    font-size: 14px;
   }
   
   .forgot-password {
     text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .forgot-password a {
+    font-size: 13px;
+  }
+  
+  button.submit-button {
+    height: 48px;
+    font-size: 16px;
+    margin-top: 15px;
   }
 }
 
 @media (max-width: 480px) {
   .login-wrapper {
     padding: 15px;
-    padding-top: 20px;
+    padding-top: 15px;
+  }
+  
+  .left-section {
+    padding: 15px 5px;
+    margin-bottom: 15px;
+  }
+  
+  .right-section {
+    padding: 15px 5px;
   }
   
   .title-left h1 {
-    font-size: 20px;
+    font-size: 18px;
+    line-height: 1.3;
   }
   
   h1 {
-    font-size: 26px;
+    font-size: 22px;
+    margin-bottom: 15px;
   }
   
   .little-text {
-    font-size: 0.55em;
+    font-size: 0.5em;
+    margin-bottom: 10px;
+  }
+  
+  .buttons {
+    margin-top: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .buttons button {
+    min-width: 120px;
+    padding: 8px 16px;
+    font-size: 11px;
   }
   
   .input-container {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
+    padding: 10px;
+  }
+  
+  .input-container label {
+    font-size: 10px;
+  }
+  
+  .input-container input {
+    font-size: 13px;
   }
   
   button.submit-button {
     height: 45px;
+    font-size: 15px;
+  }
+  
+  .login-link {
+    font-size: 13px;
+    margin-top: 12px;
+  }
+  
+  .forgot-password a {
+    font-size: 12px;
   }
 }
 
