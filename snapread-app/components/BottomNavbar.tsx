@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
+// @ts-ignore
 import { useRouter, usePathname } from 'expo-router';
 import { HomeIcon, FormationsIcon, SuccessIcon, SettingsIcon } from './TabIcons';
 import { getFontFamily } from '../constants/Fonts';
@@ -50,6 +51,14 @@ export default function BottomNavbar() {
         pathname.includes('/formation-content') ||
         pathname.includes('/course-content') ||
         pathname.includes('/quiz-content')
+      );
+    }
+    
+    // Pour l'onglet Paramètres - inclure la page purchase-history
+    if (tabRoute === '/(tabs)/settings') {
+      return (
+        pathname.includes('/settings') ||
+        pathname.includes('/purchase-history')
       );
     }
     

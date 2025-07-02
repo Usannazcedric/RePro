@@ -105,22 +105,27 @@
         <div class="sidebar-block">
           <div class="sidebar-header">
             <span>Dernières notifications</span>
-            <a href="#">Voir tout</a>
+            <router-link to="/profile/notifications" class="voir-tout-link">Voir tout</router-link>
           </div>
-          <ul v-if="recentReactions.length > 0">
-            <li v-for="reaction in recentReactions" :key="reaction.id">
+          <ul v-if="allNotifications.length > 0">
+            <li v-for="notification in allNotifications" :key="notification.id">
               <div class="avatar">
-                <img v-if="reaction.avatar_url" :src="reaction.avatar_url" class="profile-image" alt="avatar" />
-                <div v-else class="avatar-placeholder">{{ reaction.name.charAt(0).toUpperCase() }}</div>
+                <img v-if="notification.avatar_url" :src="notification.avatar_url" class="profile-image" alt="avatar" />
+                <div v-else class="avatar-placeholder">{{ notification.name.charAt(0).toUpperCase() }}</div>
               </div>
               <div>
-                <div class="name">{{ reaction.name }}</div>
-                <div class="info">A réagi avec {{ reaction.emoji }} à {{ reaction.postContent.length > 30 ? reaction.postContent.substring(0, 30) + '...' : reaction.postContent }}</div>
+                <div class="name">{{ notification.name }}</div>
+                <div class="info" v-if="notification.type === 'reaction'">
+                  A réagi avec {{ notification.emoji }} à {{ notification.postContent.length > 30 ? notification.postContent.substring(0, 30) + '...' : notification.postContent }}
+                </div>
+                <div class="info" v-else-if="notification.type === 'review'">
+                  A donné {{ notification.rating }}/5 ⭐ à votre formation "{{ notification.formationTitle.length > 25 ? notification.formationTitle.substring(0, 25) + '...' : notification.formationTitle }}"
+                </div>
               </div>
             </li>
           </ul>
           <div v-else class="no-reactions-sidebar">
-            <p class="no-reactions-text">Aucune réaction récente</p>
+            <p class="no-reactions-text">Aucune notification récente</p>
           </div>
         </div>
       </div>
@@ -137,6 +142,8 @@ import Footer from '../components/Footer.vue'
 
 const recentLearners = ref([])
 const recentReactions = ref([])
+const recentReviews = ref([])
+const allNotifications = ref([])
 
 const postContent = ref('')
 const postImage = ref(null)
@@ -346,6 +353,7 @@ async function fetchRecentReactions() {
     // Transformer les données pour l'affichage
     recentReactions.value = reactions.map(reaction => ({
       id: reaction.id,
+      type: 'reaction',
       name: profilesMap[reaction.user_id]?.username || 'Utilisateur',
       avatar_url: profilesMap[reaction.user_id]?.avatar_url || null,
       emoji: reaction.emoji,
@@ -356,6 +364,103 @@ async function fetchRecentReactions() {
   } catch (error) {
     console.error('Erreur lors du chargement des réactions récentes:', error)
   }
+}
+
+async function fetchRecentReviews() {
+  if (!user.value) return
+  
+  try {
+    // Récupérer d'abord les formations de l'utilisateur connecté
+    const { data: userFormations, error: formationsError } = await supabase
+      .from('formations')
+      .select('id, title')
+      .eq('user_id', user.value.id)
+      .order('created_at', { ascending: false })
+
+    if (formationsError) {
+      console.error('Erreur lors du chargement des formations:', formationsError)
+      return
+    }
+
+    if (!userFormations || userFormations.length === 0) {
+      recentReviews.value = []
+      return
+    }
+
+    const formationIds = userFormations.map(formation => formation.id)
+
+    // Récupérer les avis récents sur ces formations (excluant l'auteur des formations)
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select('id, formation_id, user_id, rating, created_at')
+      .in('formation_id', formationIds)
+      .neq('user_id', user.value.id) // Exclure les avis de l'utilisateur sur ses propres formations
+      .order('created_at', { ascending: false })
+      .limit(6)
+
+    if (reviewsError) {
+      console.error('Erreur lors du chargement des avis:', reviewsError)
+      return
+    }
+
+    if (!reviews || reviews.length === 0) {
+      recentReviews.value = []
+      return
+    }
+
+    // Récupérer les profils des utilisateurs qui ont donné un avis
+    const userIds = [...new Set(reviews.map(review => review.user_id))]
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error('Erreur lors du chargement des profils:', profilesError)
+    }
+
+    // Créer un map des profils
+    const profilesMap = {}
+    if (profiles) {
+      profiles.forEach(profile => {
+        profilesMap[profile.id] = profile
+      })
+    }
+
+    // Créer un map des formations
+    const formationsMap = {}
+    userFormations.forEach(formation => {
+      formationsMap[formation.id] = formation
+    })
+
+    // Transformer les données pour l'affichage
+    recentReviews.value = reviews.map(review => ({
+      id: review.id,
+      type: 'review',
+      name: profilesMap[review.user_id]?.username || 'Utilisateur',
+      avatar_url: profilesMap[review.user_id]?.avatar_url || null,
+      rating: review.rating,
+      formationTitle: formationsMap[review.formation_id]?.title || 'Formation inconnue',
+      reviewedAt: review.created_at
+    }))
+
+  } catch (error) {
+    console.error('Erreur lors du chargement des avis récents:', error)
+  }
+}
+
+function combineNotifications() {
+  // Combiner réactions et avis, puis trier par date
+  const allNotifs = [
+    ...recentReactions.value,
+    ...recentReviews.value
+  ].sort((a, b) => {
+    const dateA = new Date(a.reactedAt || a.reviewedAt)
+    const dateB = new Date(b.reactedAt || b.reviewedAt)
+    return dateB - dateA // Plus récent en premier
+  })
+  
+  allNotifications.value = allNotifs.slice(0, 6) // Limiter à 6 notifications max
 }
 
 onMounted(async () => {
@@ -369,6 +474,12 @@ onMounted(async () => {
   
   // Charge les réactions récentes
   await fetchRecentReactions()
+  
+  // Charge les avis récents
+  await fetchRecentReviews()
+  
+  // Combine toutes les notifications
+  combineNotifications()
   
   // Charge les formations publiées du user
   const { data } = await supabase

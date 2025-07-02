@@ -193,15 +193,18 @@
               <!-- Avis -->
               <td class="avis-cell">
                 <div class="rating">
-                  <span class="rating-number">8 :</span>
+                  <span class="rating-number">{{ formation.review_count || 0 }} :</span>
                   <div class="stars">
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                    <span class="star half">★</span>
+                    <span 
+                      v-for="star in 5" 
+                      :key="star"
+                      :class="['star', { 
+                        'filled': star <= Math.floor(formation.average_rating || 0),
+                        'half': star === Math.ceil(formation.average_rating || 0) && (formation.average_rating || 0) % 1 !== 0
+                      }]"
+                    >★</span>
                   </div>
-                  <span class="rating-score">4.5/5.0</span>
+                  <span class="rating-score">{{ formatRating(formation.average_rating) }}/5.0</span>
                 </div>
               </td>
 
@@ -650,6 +653,11 @@ function formatDate(dateStr) {
   })
 }
 
+function formatRating(rating) {
+  if (!rating || rating === 0) return '0.0'
+  return rating.toFixed(1)
+}
+
 async function fetchFormations() {
   loadingFormations.value = true
   const {
@@ -677,23 +685,41 @@ async function fetchFormations() {
       return
     }
     
-    // Pour chaque formation, compter les achats
-    const formationsWithPurchases = await Promise.all(
+    // Pour chaque formation, compter les achats et récupérer les notes
+    const formationsWithData = await Promise.all(
       formationsData.map(async (formation) => {
-        const { count, error: countError } = await supabase
+        // Compter les achats
+        const { count: purchaseCount, error: countError } = await supabase
           .from('purchased_formations')
           .select('*', { count: 'exact', head: true })
           .eq('formation_id', formation.id)
           .eq('status', 'active')
         
+        // Récupérer les statistiques des avis
+        const { data: reviewStats, error: reviewError } = await supabase
+          .from('reviews')
+          .select('rating')
+          .eq('formation_id', formation.id)
+        
+        let averageRating = 0
+        let reviewCount = 0
+        
+        if (!reviewError && reviewStats && reviewStats.length > 0) {
+          reviewCount = reviewStats.length
+          const totalRating = reviewStats.reduce((sum, review) => sum + review.rating, 0)
+          averageRating = totalRating / reviewCount
+        }
+        
         return {
           ...formation,
-          purchase_count: countError ? 0 : (count || 0)
+          purchase_count: countError ? 0 : (purchaseCount || 0),
+          review_count: reviewCount,
+          average_rating: averageRating
         }
       })
     )
     
-    formations.value = formationsWithPurchases
+    formations.value = formationsWithData
     
   } catch (error) {
     console.error('Erreur lors du chargement des formations:', error)

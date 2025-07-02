@@ -1,119 +1,130 @@
 import React from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  StatusBar,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+// Import des badges SVG
+import BadgeDesignIcon from '../../assets/images/badge-design.svg';
+import BiologyBadgeIcon from '../../assets/images/biology-badge.svg';
+import FigmaBadgeIcon from '../../assets/images/figma-badge.svg';
+import MarketingBadgeIcon from '../../assets/images/marketing-badge.svg';
+import PythonBadgeIcon from '../../assets/images/python-badge.svg';
+import BottomNavbar from '../../components/BottomNavbar';
 
-export default function TabTwoScreen() {
+export default function SuccessScreen() {
+  const badges = [
+    {
+      id: 1,
+      component: BadgeDesignIcon,
+      title: 'DESIGN THINKING',
+      subtitle: 'Certifié par Snapread'
+    },
+    {
+      id: 2,
+      component: BiologyBadgeIcon,
+      title: 'AP® Biology',
+      subtitle: 'Certifié par Snapread'
+    },
+    {
+      id: 3,
+      component: FigmaBadgeIcon,
+      title: 'Figma Basics',
+      subtitle: 'Certifié par Snapread'
+    },
+    {
+      id: 4,
+      component: MarketingBadgeIcon,
+      title: 'Marketing',
+      subtitle: 'Introduction à'
+    },
+    {
+      id: 5,
+      component: BadgeDesignIcon,
+      title: 'DESIGN THINKING',
+      subtitle: 'Certifié par Snapread'
+    },
+    {
+      id: 6,
+      component: BiologyBadgeIcon,
+      title: 'AP® Biology',
+      subtitle: 'Certifié par Snapread'
+    },
+    {
+      id: 7,
+      component: FigmaBadgeIcon,
+      title: 'Figma Basics',
+      subtitle: 'Certifié par Snapread'
+    },
+    {
+      id: 8,
+      component: PythonBadgeIcon,
+      title: 'Python',
+      subtitle: 'Introduction à'
+    }
+  ];
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Explore</ThemedText>
-        </ThemedView>
-
-        <ThemedText style={styles.paragraph}>
-          This app includes example code to help you get started.
-        </ThemedText>
-
-        <Collapsible title="File-based routing">
-          <ThemedText>
-            This app has two screens:{' '}
-            <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-            <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>.
-          </ThemedText>
-          <ThemedText>
-            The layout file in{' '}
-            <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText> sets up the tab navigator.
-          </ThemedText>
-          <ExternalLink href="https://docs.expo.dev/router/introduction">
-            <ThemedText type="link">Learn more</ThemedText>
-          </ExternalLink>
-        </Collapsible>
-
-        <Collapsible title="Android, iOS, and web support">
-          <ThemedText>
-            You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-            <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-          </ThemedText>
-        </Collapsible>
-
-        <Collapsible title="Images">
-          <ThemedText>
-            For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-            <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for different screen densities.
-          </ThemedText>
-          <Image
-            source={require('@/assets/images/react-logo.png')}
-            style={styles.image}
-          />
-          <ExternalLink href="https://reactnative.dev/docs/images">
-            <ThemedText type="link">Learn more</ThemedText>
-          </ExternalLink>
-        </Collapsible>
-
-        <Collapsible title="Custom fonts">
-          <ThemedText>
-            Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-            <ThemedText style={{ fontFamily: 'SpaceMono' }}>custom fonts such as this one</ThemedText>.
-          </ThemedText>
-          <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-            <ThemedText type="link">Learn more</ThemedText>
-          </ExternalLink>
-        </Collapsible>
-
-        <Collapsible title="Light and dark mode components">
-          <ThemedText>
-            This template has light and dark mode support. The{' '}
-            <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-            the user&apos;s current color scheme.
-          </ThemedText>
-          <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-            <ThemedText type="link">Learn more</ThemedText>
-          </ExternalLink>
-        </Collapsible>
-
-        <Collapsible title="Animations">
-          <ThemedText>
-            This template includes an example of an animated component. The{' '}
-            <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses{' '}
-            <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText> to create a waving hand animation.
-          </ThemedText>
-          {Platform.OS === 'ios' && (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText> component
-              provides a parallax effect for the header image.
-            </ThemedText>
-          )}
-        </Collapsible>
-      </ScrollView>
-    </SafeAreaView>
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fb" />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Mes Succès</Text>
+          
+          <View style={styles.badgesGrid}>
+              {badges.map((badge) => {
+                const BadgeComponent = badge.component;
+                return (
+                  <View key={badge.id} style={styles.badgeContainer}>
+                    <BadgeComponent 
+                      width={160} 
+                      height={160} 
+                    />
+                  </View>
+                );
+              })}
+            </View>
+        </View>
+        
+        <BottomNavbar />
+      </SafeAreaView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#f8f9fb',
   },
   container: {
-    padding: 16,
-    paddingBottom: 32,
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 110, // Espace pour la navbar
   },
-  titleContainer: {
-    marginBottom: 16,
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#7376FF',
+    marginBottom: 20,
+    textAlign: 'left',
   },
-  paragraph: {
-    marginBottom: 16,
+  badgesGrid: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+    alignContent: 'flex-start',
   },
-  image: {
-    width: 120,
-    height: 120,
-    alignSelf: 'center',
-    marginVertical: 12,
+  badgeContainer: {
+    width: '47%',
+    alignItems: 'center',
+    marginBottom: 8,
   },
 });

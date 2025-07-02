@@ -10,7 +10,9 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
+// @ts-ignore
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getFontFamily } from '../constants/Fonts';
 import { supabase } from '../lib/supabase';
 import ArrowIcon from '../assets/images/arrow.svg';
@@ -87,6 +89,12 @@ export default function CertificateResultScreen() {
   const generateBadge = async () => {
     if (generatingBadge) return;
     
+    // Vérifier qu'une note a été donnée
+    if (rating === 0) {
+      Alert.alert('Note requise', 'Veuillez donner une note avant de générer votre badge');
+      return;
+    }
+    
     try {
       setGeneratingBadge(true);
       
@@ -96,7 +104,45 @@ export default function CertificateResultScreen() {
         return;
       }
       
-      Alert.alert('Succès', 'Badge généré avec succès!');
+      // Sauvegarder la note dans la base de données
+      console.log('🔄 Sauvegarde de la note...');
+      console.log('📊 Données:', {
+        user_id: user.id,
+        formation_id: formationId,
+        rating: rating
+      });
+
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('reviews')
+        .upsert({
+          user_id: user.id,
+          formation_id: formationId,
+          rating: rating,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,formation_id'
+        })
+        .select();
+
+      if (reviewError) {
+        console.error('❌ Erreur lors de la sauvegarde de la note:', reviewError);
+        Alert.alert('Erreur', `Impossible de sauvegarder votre note: ${reviewError.message}`);
+        return;
+      }
+
+      console.log('✅ Note sauvegardée avec succès:', reviewData);
+      
+      // Rediriger vers la page de certificat avec les paramètres nécessaires
+      router.push({
+        pathname: '/certificate-badge',
+        params: {
+          formationId: formationId,
+          formationTitle: formation?.title || formationTitle,
+          rating: rating.toString(),
+          quizCorrect: quizStats.correct.toString(),
+          quizTotal: quizStats.total.toString()
+        }
+      });
       
     } catch (error) {
       console.error('Erreur lors de la génération du badge:', error);

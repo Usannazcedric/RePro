@@ -29,9 +29,14 @@
               <div class="notification-info">
                 <div class="notification-content">
                   <span class="user-name">{{ notification.name }}</span>
-                  a réagi avec <span class="emoji">{{ notification.emoji }}</span> à votre post
+                  <span v-if="notification.type === 'reaction'">
+                    a réagi avec <span class="emoji">{{ notification.emoji }}</span> à votre post
+                  </span>
+                  <span v-else-if="notification.type === 'review'">
+                    a donné <span class="rating">{{ notification.rating }}/5 ⭐</span> à votre formation "<span class="formation-title">{{ notification.formationTitle.length > 30 ? notification.formationTitle.substring(0, 30) + '...' : notification.formationTitle }}</span>"
+                  </span>
                 </div>
-                <div class="notification-time">{{ timeAgo(notification.reactedAt) }}</div>
+                <div class="notification-time">{{ timeAgo(notification.date) }}</div>
               </div>
               <div class="notification-indicator">
                 <div class="new-badge"></div>
@@ -62,9 +67,14 @@
               <div class="notification-info">
                 <div class="notification-content">
                   <span class="user-name">{{ notification.name }}</span>
-                  a réagi avec <span class="emoji">{{ notification.emoji }}</span> à votre post
+                  <span v-if="notification.type === 'reaction'">
+                    a réagi avec <span class="emoji">{{ notification.emoji }}</span> à votre post
+                  </span>
+                  <span v-else-if="notification.type === 'review'">
+                    a donné <span class="rating">{{ notification.rating }}/5 ⭐</span> à votre formation "<span class="formation-title">{{ notification.formationTitle.length > 30 ? notification.formationTitle.substring(0, 30) + '...' : notification.formationTitle }}</span>"
+                  </span>
                 </div>
-                <div class="notification-time">{{ timeAgo(notification.reactedAt) }}</div>
+                <div class="notification-time">{{ timeAgo(notification.date) }}</div>
               </div>
             </div>
           </div>
@@ -88,7 +98,9 @@ export default {
   data() {
     return {
       loading: true,
-      notifications: []
+      notifications: [],
+      reactionNotifications: [],
+      reviewNotifications: []
     }
   },
   async mounted() {
@@ -116,11 +128,30 @@ export default {
           return
         }
 
+        // Récupérer les notifications de réactions et d'avis en parallèle
+        await Promise.all([
+          this.fetchReactionNotifications(session.user),
+          this.fetchReviewNotifications(session.user)
+        ])
+
+        // Combiner toutes les notifications et les trier par date
+        this.combineNotifications()
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des notifications:', error)
+        this.notifications = []
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchReactionNotifications(user) {
+      try {
         // Récupérer d'abord les posts de l'utilisateur connecté
         const { data: userPosts, error: postsError } = await supabase
           .from('posts')
           .select('id, content')
-          .eq('user_id', session.user.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
         if (postsError) {
@@ -129,7 +160,7 @@ export default {
         }
 
         if (!userPosts || userPosts.length === 0) {
-          this.notifications = []
+          this.reactionNotifications = []
           return
         }
 
@@ -140,7 +171,7 @@ export default {
           .from('reactions')
           .select('id, post_id, user_id, emoji, created_at')
           .in('post_id', postIds)
-          .neq('user_id', session.user.id) // Exclure les réactions de l'utilisateur sur ses propres posts
+          .neq('user_id', user.id) // Exclure les réactions de l'utilisateur sur ses propres posts
           .order('created_at', { ascending: false })
 
         if (reactionsError) {
@@ -149,7 +180,7 @@ export default {
         }
 
         if (!reactions || reactions.length === 0) {
-          this.notifications = []
+          this.reactionNotifications = []
           return
         }
 
@@ -179,23 +210,117 @@ export default {
         })
 
         // Transformer les données pour l'affichage
-        this.notifications = reactions.map(reaction => ({
-          id: reaction.id,
+        this.reactionNotifications = reactions.map(reaction => ({
+          id: `reaction-${reaction.id}`,
+          type: 'reaction',
           name: profilesMap[reaction.user_id]?.username || 'Utilisateur',
           avatar_url: profilesMap[reaction.user_id]?.avatar_url || null,
           emoji: reaction.emoji,
           postContent: postsMap[reaction.post_id]?.content?.length > 50 
             ? postsMap[reaction.post_id]?.content.substring(0, 50) + '...' 
             : postsMap[reaction.post_id]?.content || 'votre post',
-          reactedAt: reaction.created_at
+          date: reaction.created_at
         }))
 
       } catch (error) {
-        console.error('Erreur lors du chargement des notifications:', error)
-        this.notifications = []
-      } finally {
-        this.loading = false
+        console.error('Erreur lors du chargement des notifications de réactions:', error)
+        this.reactionNotifications = []
       }
+    },
+
+    async fetchReviewNotifications(user) {
+      try {
+        // Récupérer d'abord les formations de l'utilisateur connecté
+        const { data: userFormations, error: formationsError } = await supabase
+          .from('formations')
+          .select('id, title')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (formationsError) {
+          console.error('Erreur lors du chargement des formations:', formationsError)
+          return
+        }
+
+        if (!userFormations || userFormations.length === 0) {
+          this.reviewNotifications = []
+          return
+        }
+
+        const formationIds = userFormations.map(formation => formation.id)
+
+        // Récupérer les avis récents sur ces formations (excluant l'auteur des formations)
+        const { data: reviews, error: reviewsError } = await supabase
+          .from('reviews')
+          .select('id, formation_id, user_id, rating, created_at')
+          .in('formation_id', formationIds)
+          .neq('user_id', user.id) // Exclure les avis de l'utilisateur sur ses propres formations
+          .order('created_at', { ascending: false })
+
+        if (reviewsError) {
+          console.error('Erreur lors du chargement des avis:', reviewsError)
+          return
+        }
+
+        if (!reviews || reviews.length === 0) {
+          this.reviewNotifications = []
+          return
+        }
+
+        // Récupérer les profils des utilisateurs qui ont donné un avis
+        const userIds = [...new Set(reviews.map(review => review.user_id))]
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds)
+
+        if (profilesError) {
+          console.error('Erreur lors du chargement des profils:', profilesError)
+        }
+
+        // Créer un map des profils
+        const profilesMap = {}
+        if (profiles) {
+          profiles.forEach(profile => {
+            profilesMap[profile.id] = profile
+          })
+        }
+
+        // Créer un map des formations
+        const formationsMap = {}
+        userFormations.forEach(formation => {
+          formationsMap[formation.id] = formation
+        })
+
+        // Transformer les données pour l'affichage
+        this.reviewNotifications = reviews.map(review => ({
+          id: `review-${review.id}`,
+          type: 'review',
+          name: profilesMap[review.user_id]?.username || 'Utilisateur',
+          avatar_url: profilesMap[review.user_id]?.avatar_url || null,
+          rating: review.rating,
+          formationTitle: formationsMap[review.formation_id]?.title || 'Formation inconnue',
+          date: review.created_at
+        }))
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des notifications d\'avis:', error)
+        this.reviewNotifications = []
+      }
+    },
+
+    combineNotifications() {
+      // Combiner réactions et avis, puis trier par date
+      const allNotifs = [
+        ...this.reactionNotifications,
+        ...this.reviewNotifications
+      ].sort((a, b) => {
+        const dateA = new Date(a.date)
+        const dateB = new Date(b.date)
+        return dateB - dateA // Plus récent en premier
+      })
+      
+      this.notifications = allNotifs
     },
 
     timeAgo(dateStr) {
@@ -324,6 +449,17 @@ export default {
 .emoji {
   font-size: 1.125rem;
   margin: 0 0.25rem;
+}
+
+.rating {
+  font-weight: 600;
+  color: #f59e0b;
+  margin: 0 0.25rem;
+}
+
+.formation-title {
+  font-weight: 600;
+  color: #7376ff;
 }
 
 .notification-time {
