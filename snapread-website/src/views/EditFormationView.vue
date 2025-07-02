@@ -13,7 +13,6 @@
       </div>
 
       <div v-else-if="formation" class="edit-form">
-        <!-- Informations de base -->
         <div class="section">
           <h2>Informations générales</h2>
           <div class="form-group">
@@ -44,13 +43,12 @@
           </div>
         </div>
 
-        <!-- Photo de couverture -->
         <div class="section">
           <h2>Photo de couverture</h2>
           <div class="cover-section">
             <div v-if="coverPreview" class="cover-preview">
               <img :src="coverPreview" alt="Couverture" class="cover-img" />
-              <button @click="removeCover" class="remove-btn">×</button>
+              <button @click="removeCover" class="remove-btn remove-btn-absolute">×</button>
             </div>
             <div v-else class="cover-upload">
               <input type="file" ref="coverInput" @change="handleCoverUpload" accept="image/*" class="file-input" />
@@ -61,14 +59,13 @@
           </div>
         </div>
 
-        <!-- Contenu de la formation -->
         <div v-if="hasChapters" class="section">
-          <h2>📚 Chapitres de la formation</h2>
+          <h2>Chapitres de la formation</h2>
           
           <div v-for="(chapter, chapterIndex) in formation.chapters" :key="chapter.id" class="chapter-item">
             <div class="chapter-header">
               <h3>Chapitre {{ chapter.id }}: {{ chapter.title }}</h3>
-              <button @click="removeChapter(chapterIndex)" class="remove-btn" v-if="formation.chapters.length > 1">🗑️</button>
+              <button @click="removeChapter(chapterIndex)" class="remove-btn" v-if="formation.chapters.length > 1">×</button>
             </div>
             
             <div class="form-group">
@@ -76,13 +73,12 @@
               <input v-model="chapter.title" class="input" />
             </div>
             
-            <!-- Cours du chapitre -->
             <div class="courses-section">
-              <h4>📖 Cours</h4>
+              <h4>Cours</h4>
               <div v-for="(course, courseIndex) in chapter.courses" :key="course.id" class="course-item">
                 <div class="course-header">
                   <span>Cours {{ course.id }}</span>
-                  <button @click="removeCourse(chapterIndex, courseIndex)" class="remove-btn" v-if="chapter.courses.length > 1">🗑️</button>
+                  <button @click="removeCourse(chapterIndex, courseIndex)" class="remove-btn" v-if="chapter.courses.length > 1">×</button>
                 </div>
                 
                 <div class="form-group">
@@ -104,13 +100,12 @@
               <button @click="addCourse(chapterIndex)" class="add-btn">+ Ajouter un cours</button>
             </div>
             
-            <!-- Quiz du chapitre -->
             <div class="quizzes-section">
-              <h4>🎯 Quiz</h4>
+              <h4>Quiz</h4>
               <div v-for="(quiz, quizIndex) in chapter.quizzes" :key="quiz.id" class="quiz-item">
                 <div class="quiz-header">
                   <span>Quiz {{ quiz.id }}</span>
-                  <button @click="removeChapterQuiz(chapterIndex, quizIndex)" class="remove-btn" v-if="chapter.quizzes.length > 1">🗑️</button>
+                  <button @click="removeChapterQuiz(chapterIndex, quizIndex)" class="remove-btn" v-if="chapter.quizzes.length > 1">×</button>
                 </div>
                 
                 <div class="form-group">
@@ -142,9 +137,7 @@
           <button @click="addChapter" class="add-chapter-btn">+ Ajouter un chapitre</button>
         </div>
         
-        <!-- Ancien format (fallback) -->
         <div v-else>
-          <!-- Résumé -->
           <div class="section">
             <h2>Résumé du cours</h2>
             <div class="form-group">
@@ -152,13 +145,12 @@
             </div>
           </div>
 
-          <!-- Quiz -->
           <div class="section">
             <h2>Quiz</h2>
             <div v-for="(quiz, index) in formation.quizzes" :key="index" class="quiz-item">
               <div class="quiz-header">
                 <h3>Question {{ index + 1 }}</h3>
-                <button @click="removeQuiz(index)" class="remove-quiz-btn">🗑️</button>
+                <button @click="removeQuiz(index)" class="remove-btn">×</button>
               </div>
               
               <div class="form-group">
@@ -186,7 +178,6 @@
             <button @click="addQuiz" class="add-quiz-btn">+ Ajouter un quiz</button>
           </div>
 
-          <!-- Tips -->
           <div class="section">
             <h2>Conseils et astuces</h2>
             <div class="form-group">
@@ -195,7 +186,6 @@
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="actions">
           <button @click="saveChanges" :disabled="saving" class="save-btn">
             {{ saving ? 'Sauvegarde...' : 'Sauvegarder les modifications' }}
@@ -470,7 +460,7 @@ function goBack() {
 <style scoped>
 .edit-formation {
   min-height: 100vh;
-  background: #ffffff;
+  background: #E9E9EE;
   color: #000;
   padding: 2rem 1rem;
 }
@@ -504,13 +494,14 @@ function goBack() {
 }
 
 .section {
-  background: #f8f9fa;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .section h2 {
@@ -576,9 +567,7 @@ function goBack() {
 }
 
 .remove-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  position: relative;
   background: rgba(255, 0, 0, 0.8);
   color: white;
   border: none;
@@ -586,6 +575,22 @@ function goBack() {
   width: 24px;
   height: 24px;
   cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.remove-btn:hover {
+  background: rgba(255, 0, 0, 0.9);
+}
+
+.remove-btn-absolute {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 
 .file-input {
@@ -769,7 +774,7 @@ function goBack() {
 }
 
 .add-chapter-btn {
-  background: #10b981;
+  background: #7376FF;
   color: white;
   border: none;
   border-radius: 8px;
@@ -781,26 +786,28 @@ function goBack() {
 }
 
 .add-chapter-btn:hover {
-  background: #059669;
+  background: #5d60d6;
 }
 
 .chapter-item .remove-btn {
-  position: static;
-  background: #ef4444;
+  position: relative;
+  background: rgba(255, 0, 0, 0.8);
   color: white;
   border: none;
   border-radius: 50%;
   width: 24px;
   height: 24px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  line-height: 1;
 }
 
 .chapter-item .remove-btn:hover {
-  background: #dc2626;
+  background: rgba(255, 0, 0, 0.9);
 }
 
 @media (max-width: 768px) {
