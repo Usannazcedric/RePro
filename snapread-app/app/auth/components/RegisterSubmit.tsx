@@ -74,8 +74,8 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
         email: userData.email,
         tranche_age: userData.age,
         genre: userData.genre,
-        theme: userData.themes ? userData.themes.join(', ') : '',
-        raison: userData.raisons ? userData.raisons.join(', ') : '',
+        theme: Array.isArray(userData.themes) ? userData.themes.join(', ') : userData.theme,
+        raison: Array.isArray(userData.raisons) ? userData.raisons.join(', ') : userData.raison,
         rythme: userData.rythme
       };
 
@@ -88,11 +88,12 @@ export default function RegisterSubmit({ userData, onPrev, onSubmit }: RegisterS
         .select();
 
       if (profileError) {
+        console.error('❌ Erreur lors de la création du profil:', profileError);
         Alert.alert('Erreur', 'Erreur lors de la création du profil. Veuillez réessayer.');
         return;
       }
 
-      console.log('✅ Profil créé avec succès');
+      console.log('✅ Profil créé avec succès:', profileResult);
       
       onSubmit();
       
